@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36310.24 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PolyPartitionCS", "PolyPartitionCS.csproj", "{6488FA98-9274-4B78-B1AA-EDBD621D4350}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6488FA98-9274-4B78-B1AA-EDBD621D4350}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6488FA98-9274-4B78-B1AA-EDBD621D4350}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6488FA98-9274-4B78-B1AA-EDBD621D4350}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6488FA98-9274-4B78-B1AA-EDBD621D4350}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {73C6244B-DF02-4701-9EB8-18B53DCC1F02}
+	EndGlobalSection
+EndGlobal

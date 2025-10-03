@@ -1,0 +1,129 @@
+﻿namespace PolyPartition;
+
+partial class TPPLPartition
+{
+    public static bool Triangulate_OPT(TPPLPoly poly, out List<TPPLPoly> triangles)
+    {
+        triangles = [];
+        int len = poly.Count;
+
+        if (!poly.IsValid) return false;
+
+        DPState[][] dpstates = new DPState[len][];
+        for (int i = 1; i < len; i++)
+        {
+            dpstates[i] = new DPState[i];
+            for (int j = 0; j < i; j++)
+                dpstates[i][j] = new DPState();
+        }
+
+        // Initialize states and visibility
+        for (int i = 0; i < len - 1; i++)
+        {
+            TPPLPoint p1 = poly[i];
+            for (int j = i + 1; j < len; j++)
+            {
+                dpstates[j][i].Visible = true;
+                dpstates[j][i].Weight = 0;
+                dpstates[j][i].BestVertex = -1;
+
+                if (j != i + 1)
+                {
+                    TPPLPoint p2 = poly[j];
+
+                    // Visibility check
+                    TPPLPoint p3 = poly[i == 0 ? len - 1 : i - 1];
+                    TPPLPoint p4 = poly[i == len - 1 ? 0 : i + 1];
+                    if (!TPPLPointExt.InCone(p3, p1, p4, p2))
+                    {
+                        dpstates[j][i].Visible = false;
+                        continue;
+                    }
+
+                    p3 = poly[j == 0 ? len - 1 : j - 1];
+                    p4 = poly[j == len - 1 ? 0 : j + 1];
+                    if (!TPPLPointExt.InCone(p3, p2, p4, p1))
+                    {
+                        dpstates[j][i].Visible = false;
+                        continue;
+                    }
+
+                    for (int k = 0; k < len; k++)
+                    {
+                        p3 = poly[k];
+                        p4 = poly[k == len - 1 ? 0 : k + 1];
+                        if (TPPLPointExt.Intersects(p1, p2, p3, p4))
+                        {
+                            dpstates[j][i].Visible = false;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        dpstates[len - 1][0].Visible = true;
+        dpstates[len - 1][0].Weight = 0;
+        dpstates[len - 1][0].BestVertex = -1;
+
+        for (int gap = 2; gap < len; gap++)
+        {
+            for (int i = 0; i < len - gap; i++)
+            {
+                int j = i + gap;
+                if (!dpstates[j][i].Visible) continue;
+
+                int bestVertex = -1;
+                float minWeight = 0;
+
+                for (int k = i + 1; k < j; k++)
+                {
+                    if (!dpstates[k][i].Visible || !dpstates[j][k].Visible)
+                        continue;
+
+                    float d1 = k <= i + 1 ? 0 : TPPLPointExt.Distance(poly[i], poly[k]);
+                    float d2 = j <= k + 1 ? 0 : TPPLPointExt.Distance(poly[k], poly[j]);
+                    float weight = dpstates[k][i].Weight + dpstates[j][k].Weight + d1 + d2;
+
+                    if (bestVertex == -1 || weight < minWeight)
+                    {
+                        bestVertex = k;
+                        minWeight = weight;
+                    }
+                }
+
+                if (bestVertex == -1)
+                    return false;
+
+                dpstates[j][i].BestVertex = bestVertex;
+                dpstates[j][i].Weight = minWeight;
+            }
+        }
+
+        List<Diagonal> diagonals = [new Diagonal { Index1 = 0, Index2 = len - 1 }];
+
+        while (diagonals.Count > 0)
+        {
+            Diagonal diagonal = diagonals[0];
+            diagonals.RemoveAt(0);
+
+            int bestVertex = dpstates[diagonal.Index2][diagonal.Index1].BestVertex;
+            if (bestVertex == -1)
+                return false;
+
+            TPPLPoly triangle = new(poly[diagonal.Index1], poly[bestVertex], poly[diagonal.Index2]);
+            triangles.Add(triangle);
+
+            if (bestVertex > diagonal.Index1 + 1)
+            {
+                diagonals.Add(new Diagonal { Index1 = diagonal.Index1, Index2 = bestVertex });
+            }
+            if (diagonal.Index2 > bestVertex + 1)
+            {
+                diagonals.Add(new Diagonal { Index1 = bestVertex, Index2 = diagonal.Index2 });
+            }
+        }
+
+        return true;
+    }
+
+}
