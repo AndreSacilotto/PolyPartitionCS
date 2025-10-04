@@ -67,7 +67,7 @@ partial class TPPLPartition
     {
         triangles = [];
         if (!RemoveHoles(inPolys, out var outPolys, holeOrientation))
-            return false; 
+            return false;
         foreach (var poly in outPolys)
             if (!Triangulate_EC(poly, triangles))
                 return false;
@@ -85,7 +85,7 @@ partial class TPPLPartition
         }
 
         PartitionVertex[] vertices = PartitionFromPoly(poly);
-        
+
         for (int i = 0; i < len; i++)
             UpdateVertex(vertices[i], vertices);
 

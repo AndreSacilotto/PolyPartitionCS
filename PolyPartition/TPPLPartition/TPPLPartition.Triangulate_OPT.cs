@@ -99,28 +99,28 @@ partial class TPPLPartition
             }
         }
 
-        List<Diagonal> diagonals = [new Diagonal { Index1 = 0, Index2 = len - 1 }];
+        Queue<Diagonal> diagonals = new();
+        diagonals.Enqueue(new Diagonal { Index1 = 0, Index2 = len - 1 });
 
         while (diagonals.Count > 0)
         {
-            Diagonal diagonal = diagonals[0];
-            diagonals.RemoveAt(0);
+            Diagonal diagonal = diagonals.Dequeue();
 
             int bestVertex = dpstates[diagonal.Index2][diagonal.Index1].BestVertex;
             if (bestVertex == -1)
                 return false;
 
-            TPPLPoint[] triangle = TPPLPointUtil.Triangle(poly[diagonal.Index1], poly[bestVertex], poly[diagonal.Index2]);
+            TPPLPoint[] triangle = TPPLPointUtil.Triangle(
+                poly[diagonal.Index1],
+                poly[bestVertex],
+                poly[diagonal.Index2]
+            );
             triangles.Add(triangle);
 
             if (bestVertex > diagonal.Index1 + 1)
-            {
-                diagonals.Add(new Diagonal { Index1 = diagonal.Index1, Index2 = bestVertex });
-            }
+                diagonals.Enqueue(new Diagonal { Index1 = diagonal.Index1, Index2 = bestVertex });
             if (diagonal.Index2 > bestVertex + 1)
-            {
-                diagonals.Add(new Diagonal { Index1 = bestVertex, Index2 = diagonal.Index2 });
-            }
+                diagonals.Enqueue(new Diagonal { Index1 = bestVertex, Index2 = diagonal.Index2 });
         }
 
         return true;

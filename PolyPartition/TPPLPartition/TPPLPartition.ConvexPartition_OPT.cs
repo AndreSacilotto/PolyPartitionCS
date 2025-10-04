@@ -3,118 +3,118 @@
 partial class TPPLPartition
 {
     #region Helper functions for ConvexPartition_OPT
-    private static void UpdateState(int a, int b, int w, int i, int j, DPState2[][] dpstates)
+    private static void UpdateState(int startIndex, int endIndex, int newWeight, int diagonalStart, int diagonalEnd, DPState2[][] dpstates)
     {
-        int w2 = dpstates[a][b].Weight;
-        if (w > w2) return;
+        int currentWeight = dpstates[startIndex][endIndex].Weight;
+        if (newWeight > currentWeight) return;
 
-        var pairs = dpstates[a][b].Pairs;
-        Diagonal newDiagonal = new() { Index1 = i, Index2 = j };
+        var diagonalPairs = dpstates[startIndex][endIndex].Pairs;
+        Diagonal newDiagonal = new() { Index1 = diagonalStart, Index2 = diagonalEnd };
 
-        if (w < w2)
+        if (newWeight < currentWeight)
         {
-            pairs.Clear();
-            pairs.Add(newDiagonal);
-            dpstates[a][b].Weight = w;
+            diagonalPairs.Clear();
+            diagonalPairs.Add(newDiagonal);
+            dpstates[startIndex][endIndex].Weight = newWeight;
         }
         else
         {
-            if (pairs.Count > 0 && i <= pairs[0].Index1) return;
-            while (pairs.Count > 0 && pairs[0].Index2 >= j)
-                pairs.RemoveAt(0);
-            pairs.Insert(0, newDiagonal);
+            if (diagonalPairs.Count > 0 && diagonalStart <= diagonalPairs[0].Index1) return;
+            while (diagonalPairs.Count > 0 && diagonalPairs[0].Index2 >= diagonalEnd)
+                diagonalPairs.RemoveAt(0);
+            diagonalPairs.Insert(0, newDiagonal);
         }
     }
 
-    private static void TypeA(int i, int j, int k, PartitionVertex[] vertices, DPState2[][] dpstates)
+    private static void TypeA(int startVertex, int middleVertex, int endVertex, PartitionVertex[] vertices, DPState2[][] dpstates)
     {
-        if (!dpstates[i][j].Visible) return;
+        if (!dpstates[startVertex][middleVertex].Visible) return;
 
-        int top = j;
-        int w = dpstates[i][j].Weight;
+        int topVertex = middleVertex;
+        int totalWeight = dpstates[startVertex][middleVertex].Weight;
 
-        if (k - j > 1)
+        if (endVertex - middleVertex > 1)
         {
-            if (!dpstates[j][k].Visible) return;
-            w += dpstates[j][k].Weight + 1;
+            if (!dpstates[middleVertex][endVertex].Visible) return;
+            totalWeight += dpstates[middleVertex][endVertex].Weight + 1;
         }
 
-        if (j - i > 1)
+        if (middleVertex - startVertex > 1)
         {
-            var pairs = dpstates[i][j].Pairs;
-            int lastIterIndex = -1;
+            var diagonalPairs = dpstates[startVertex][middleVertex].Pairs;
+            int lastValidPairIndex = -1;
 
-            for (int idx = pairs.Count - 1; idx >= 0; idx--)
+            for (int pairIndex = diagonalPairs.Count - 1; pairIndex >= 0; pairIndex--)
             {
-                var iter = pairs[idx];
-                if (!TPPLPointUtil.IsReflex(vertices[iter.Index2].Point, vertices[j].Point, vertices[k].Point))
-                    lastIterIndex = idx;
+                var currentPair = diagonalPairs[pairIndex];
+                if (!TPPLPointUtil.IsReflex(vertices[currentPair.Index2].Point, vertices[middleVertex].Point, vertices[endVertex].Point))
+                    lastValidPairIndex = pairIndex;
                 else
                     break;
             }
 
-            if (lastIterIndex == -1)
+            if (lastValidPairIndex == -1)
             {
-                w++;
+                totalWeight++;
             }
             else
             {
-                var lastIter = pairs[lastIterIndex];
-                if (TPPLPointUtil.IsReflex(vertices[k].Point, vertices[i].Point, vertices[lastIter.Index1].Point))
+                var lastValidPair = diagonalPairs[lastValidPairIndex];
+                if (TPPLPointUtil.IsReflex(vertices[endVertex].Point, vertices[startVertex].Point, vertices[lastValidPair.Index1].Point))
                 {
-                    w++;
+                    totalWeight++;
                 }
                 else
                 {
-                    top = lastIter.Index1;
+                    topVertex = lastValidPair.Index1;
                 }
             }
         }
 
-        UpdateState(i, k, w, top, j, dpstates);
+        UpdateState(startVertex, endVertex, totalWeight, topVertex, middleVertex, dpstates);
     }
 
-    private static void TypeB(int i, int j, int k, PartitionVertex[] vertices, DPState2[][] dpstates)
+    private static void TypeB(int startVertex, int middleVertex, int endVertex, PartitionVertex[] vertices, DPState2[][] dpstates)
     {
-        if (!dpstates[j][k].Visible) return;
+        if (!dpstates[middleVertex][endVertex].Visible) return;
 
-        int top = j;
-        int w = dpstates[j][k].Weight;
+        int topVertex = middleVertex;
+        int totalWeight = dpstates[middleVertex][endVertex].Weight;
 
-        if (j - i > 1)
+        if (middleVertex - startVertex > 1)
         {
-            if (!dpstates[i][j].Visible) return;
-            w += dpstates[i][j].Weight + 1;
+            if (!dpstates[startVertex][middleVertex].Visible) return;
+            totalWeight += dpstates[startVertex][middleVertex].Weight + 1;
         }
 
-        if (k - j > 1)
+        if (endVertex - middleVertex > 1)
         {
-            var pairs = dpstates[j][k].Pairs;
+            var diagonalPairs = dpstates[middleVertex][endVertex].Pairs;
 
-            if (pairs.Count > 0 && !TPPLPointUtil.IsReflex(vertices[i].Point, vertices[j].Point, vertices[pairs[0].Index1].Point))
+            if (diagonalPairs.Count > 0 && !TPPLPointUtil.IsReflex(vertices[startVertex].Point, vertices[middleVertex].Point, vertices[diagonalPairs[0].Index1].Point))
             {
-                int lastIterIndex = 0;
-                for (int idx = 0; idx < pairs.Count; idx++)
+                int lastValidPairIndex = 0;
+                for (int pairIndex = 0; pairIndex < diagonalPairs.Count; pairIndex++)
                 {
-                    if (!TPPLPointUtil.IsReflex(vertices[idx].Point, vertices[j].Point, vertices[pairs[idx].Index1].Point))
-                        lastIterIndex = idx;
+                    if (!TPPLPointUtil.IsReflex(vertices[pairIndex].Point, vertices[middleVertex].Point, vertices[diagonalPairs[pairIndex].Index1].Point))
+                        lastValidPairIndex = pairIndex;
                     else
                         break;
                 }
 
-                var lastIter = pairs[lastIterIndex];
-                if (TPPLPointUtil.IsReflex(vertices[lastIter.Index2].Point, vertices[k].Point, vertices[i].Point))
-                    w++;
+                var lastValidPair = diagonalPairs[lastValidPairIndex];
+                if (TPPLPointUtil.IsReflex(vertices[lastValidPair.Index2].Point, vertices[endVertex].Point, vertices[startVertex].Point))
+                    totalWeight++;
                 else
-                    top = lastIter.Index2;
+                    topVertex = lastValidPair.Index2;
             }
             else
             {
-                w++;
+                totalWeight++;
             }
         }
 
-        UpdateState(i, k, w, j, top, dpstates);
+        UpdateState(startVertex, endVertex, totalWeight, middleVertex, topVertex, dpstates);
     }
 
     #endregion
@@ -123,55 +123,55 @@ partial class TPPLPartition
     {
         parts = [];
 
-        int len = poly.Length;
-        if (len < 3) return false;
+        int vertexCount = poly.Length;
+        if (vertexCount < 3) return false;
 
-        PartitionVertex[] vertices = new PartitionVertex[len];
-        DPState2[][] dpstates = new DPState2[len][];
+        PartitionVertex[] vertices = new PartitionVertex[vertexCount];
+        DPState2[][] dpstates = new DPState2[vertexCount][];
 
-        for (int i = 0; i < len; i++)
+        for (int i = 0; i < vertexCount; i++)
         {
-            dpstates[i] = new DPState2[len];
-            for (int j = 0; j < len; j++)
+            dpstates[i] = new DPState2[vertexCount];
+            for (int j = 0; j < vertexCount; j++)
                 dpstates[i][j] = new DPState2();
         }
 
         // Initialize vertices
-        for (int i = 0; i < len; i++)
+        for (int i = 0; i < vertexCount; i++)
         {
-            vertices[i] = new(vertices[i == 0 ? len - 1 : i - 1], vertices[i == len - 1 ? 0 : i + 1])
+            vertices[i] = new(vertices[i == 0 ? vertexCount - 1 : i - 1], vertices[i == vertexCount - 1 ? 0 : i + 1])
             {
                 Point = poly[i],
                 IsActive = true
             };
         }
 
-        for (int i = 1; i < len; i++)
+        for (int i = 1; i < vertexCount; i++)
             vertices[i].UpdateVertexReflexity();
 
         // Initialize states
-        for (int i = 0; i < len - 1; i++)
+        for (int startIndex = 0; startIndex < vertexCount - 1; startIndex++)
         {
-            for (int j = i + 1; j < len; j++)
+            for (int endIndex = startIndex + 1; endIndex < vertexCount; endIndex++)
             {
-                dpstates[i][j].Visible = true;
-                dpstates[i][j].Weight = j == i + 1 ? 0 : int.MaxValue;
+                dpstates[startIndex][endIndex].Visible = true;
+                dpstates[startIndex][endIndex].Weight = endIndex == startIndex + 1 ? 0 : int.MaxValue;
 
-                if (j != i + 1)
+                if (endIndex != startIndex + 1)
                 {
-                    if (!vertices[i].InCone(poly[j]) || !vertices[j].InCone(poly[i]))
+                    if (!vertices[startIndex].InCone(poly[endIndex]) || !vertices[endIndex].InCone(poly[startIndex]))
                     {
-                        dpstates[i][j].Visible = false;
+                        dpstates[startIndex][endIndex].Visible = false;
                         continue;
                     }
 
-                    for (int k = 0; k < len; k++)
+                    for (int edgeStart = 0; edgeStart < vertexCount; edgeStart++)
                     {
-                        TPPLPoint p3 = poly[k];
-                        TPPLPoint p4 = poly[k == len - 1 ? 0 : k + 1];
-                        if (TPPLPointUtil.Intersects(poly[i], poly[j], p3, p4))
+                        TPPLPoint edgePoint1 = poly[edgeStart];
+                        TPPLPoint edgePoint2 = poly[edgeStart == vertexCount - 1 ? 0 : edgeStart + 1];
+                        if (TPPLPointUtil.Intersects(poly[startIndex], poly[endIndex], edgePoint1, edgePoint2))
                         {
-                            dpstates[i][j].Visible = false;
+                            dpstates[startIndex][endIndex].Visible = false;
                             break;
                         }
                     }
@@ -179,94 +179,95 @@ partial class TPPLPartition
             }
         }
 
-        for (int i = 0; i < len - 2; i++)
+        for (int startIndex = 0; startIndex < vertexCount - 2; startIndex++)
         {
-            int j = i + 2;
-            if (dpstates[i][j].Visible)
+            int endIndex = startIndex + 2;
+            if (dpstates[startIndex][endIndex].Visible)
             {
-                dpstates[i][j].Weight = 0;
-                dpstates[i][j].Pairs.Add(new Diagonal { Index1 = i + 1, Index2 = i + 1 });
+                dpstates[startIndex][endIndex].Weight = 0;
+                dpstates[startIndex][endIndex].Pairs.Add(new Diagonal { Index1 = startIndex + 1, Index2 = startIndex + 1 });
             }
         }
 
-        dpstates[0][len - 1].Visible = true;
+        dpstates[0][vertexCount - 1].Visible = true;
         vertices[0].IsConvex = false;
 
-        for (int gap = 3; gap < len; gap++)
+        for (int gap = 3; gap < vertexCount; gap++)
         {
-            for (int i = 0; i < len - gap; i++)
+            for (int startVertex = 0; startVertex < vertexCount - gap; startVertex++)
             {
-                if (vertices[i].IsConvex) continue;
-                int k = i + gap;
-                if (dpstates[i][k].Visible)
+                if (vertices[startVertex].IsConvex) continue;
+                int endVertex = startVertex + gap;
+                if (dpstates[startVertex][endVertex].Visible)
                 {
-                    if (!vertices[k].IsConvex)
+                    if (!vertices[endVertex].IsConvex)
                     {
-                        for (int j = i + 1; j < k; j++)
-                            TypeA(i, j, k, vertices, dpstates);
+                        for (int middleVertex = startVertex + 1; middleVertex < endVertex; middleVertex++)
+                            TypeA(startVertex, middleVertex, endVertex, vertices, dpstates);
                     }
                     else
                     {
-                        for (int j = i + 1; j < k - 1; j++)
+                        for (int middleVertex = startVertex + 1; middleVertex < endVertex - 1; middleVertex++)
                         {
-                            if (vertices[j].IsConvex) continue;
-                            TypeA(i, j, k, vertices, dpstates);
+                            if (vertices[middleVertex].IsConvex) continue;
+                            TypeA(startVertex, middleVertex, endVertex, vertices, dpstates);
                         }
-                        TypeA(i, k - 1, k, vertices, dpstates);
+                        TypeA(startVertex, endVertex - 1, endVertex, vertices, dpstates);
                     }
                 }
             }
 
-            for (int k = gap; k < len; k++)
+            for (int endVertex = gap; endVertex < vertexCount; endVertex++)
             {
-                if (vertices[k].IsConvex) continue;
-                int i = k - gap;
-                if (vertices[i].IsConvex && dpstates[i][k].Visible)
+                if (vertices[endVertex].IsConvex) continue;
+                int startVertex = endVertex - gap;
+                if (vertices[startVertex].IsConvex && dpstates[startVertex][endVertex].Visible)
                 {
-                    TypeB(i, i + 1, k, vertices, dpstates);
-                    for (int j = i + 2; j < k; j++)
+                    TypeB(startVertex, startVertex + 1, endVertex, vertices, dpstates);
+                    for (int middleVertex = startVertex + 2; middleVertex < endVertex; middleVertex++)
                     {
-                        if (vertices[j].IsConvex) continue;
-                        TypeB(i, j, k, vertices, dpstates);
+                        if (vertices[middleVertex].IsConvex) continue;
+                        TypeB(startVertex, middleVertex, endVertex, vertices, dpstates);
                     }
                 }
             }
         }
 
-        // Recover solution (simplified version)
-        List<Diagonal> diagonals = [new Diagonal { Index1 = 0, Index2 = len - 1 }];
+        // Recover solution
+        Queue<Diagonal> diagonals = new(1);
+        diagonals.Enqueue(new Diagonal { Index1 = 0, Index2 = vertexCount - 1 });
 
         while (diagonals.Count > 0)
         {
-            Diagonal diagonal = diagonals[0];
-            diagonals.RemoveAt(0);
+            Diagonal currentDiagonal = diagonals.Dequeue();
 
-            if (diagonal.Index2 - diagonal.Index1 <= 1) continue;
+            if (currentDiagonal.Index2 - currentDiagonal.Index1 <= 1) continue;
 
-            var pairs = dpstates[diagonal.Index1][diagonal.Index2].Pairs;
-            if (pairs.Count == 0) return false;
+            var diagonalPairs = dpstates[currentDiagonal.Index1][currentDiagonal.Index2].Pairs;
+            if (diagonalPairs.Count == 0) return false;
 
-            int j;
-            if (!vertices[diagonal.Index1].IsConvex)
+            int selectedVertex;
+            if (!vertices[currentDiagonal.Index1].IsConvex)
             {
-                j = pairs[pairs.Count - 1].Index2;
+                selectedVertex = diagonalPairs[^1].Index2;
             }
             else
             {
-                j = pairs[0].Index1;
+                selectedVertex = diagonalPairs[0].Index1;
             }
 
-            List<int> indices = [diagonal.Index1, j, diagonal.Index2];
-            indices.Sort();
-            var newPoly = new TPPLPoint[indices.Count];
-            for (int i = 0; i < indices.Count; i++)
-                newPoly[i] = vertices[indices[i]].Point;
-            parts.Add(newPoly);
+            List<int> triangleIndices = [currentDiagonal.Index1, selectedVertex, currentDiagonal.Index2];
+            triangleIndices.Sort();
 
-            if (j > diagonal.Index1 + 1)
-                diagonals.Add(new Diagonal { Index1 = diagonal.Index1, Index2 = j });
-            if (diagonal.Index2 > j + 1)
-                diagonals.Add(new Diagonal { Index1 = j, Index2 = diagonal.Index2 });
+            var newPolygon = new TPPLPoint[triangleIndices.Count];
+            for (int i = 0; i < triangleIndices.Count; i++)
+                newPolygon[i] = vertices[triangleIndices[i]].Point;
+            parts.Add(newPolygon);
+
+            if (selectedVertex > currentDiagonal.Index1 + 1)
+                diagonals.Enqueue(new Diagonal { Index1 = currentDiagonal.Index1, Index2 = selectedVertex });
+            if (currentDiagonal.Index2 > selectedVertex + 1)
+                diagonals.Enqueue(new Diagonal { Index1 = selectedVertex, Index2 = currentDiagonal.Index2 });
         }
 
         return true;

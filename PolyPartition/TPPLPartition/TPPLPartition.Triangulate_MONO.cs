@@ -52,13 +52,10 @@ partial class TPPLPartition
         return false;
     }
 
-    private static bool TriangulateMonotone(TPPLPoint[] inPolys, out List<TPPLPoint[]> triangles)
+    private static bool TriangulateMonotone(TPPLPoint[] inPolys, List<TPPLPoint[]> triangles)
     {
         int len = inPolys.Length;
-        triangles = [];
-
         if (len < 3) return false;
-
         if (len == 3)
         {
             triangles.Add(inPolys);
@@ -198,6 +195,17 @@ partial class TPPLPartition
     }
     #endregion
 
+    public static bool Triangulate_MONO(List<TPPLPoint[]> inPolys, out List<TPPLPoint[]> triangles)
+    {
+        triangles = [];
+        if (!MonotonePartition(inPolys, out var monotone))
+            return false;
+        foreach (var poly in monotone)
+            if (!TriangulateMonotone(poly, triangles))
+                return false;
+        return true;
+    }
+
     public static bool MonotonePartition(List<TPPLPoint[]> inPolys, out List<TPPLPoint[]> monotonePolys)
     {
         monotonePolys = [];
@@ -236,22 +244,20 @@ partial class TPPLPartition
         Array.Sort(priority, new VertexSorter(vertices));
 
         // Determine vertex types
-        TPPLVertexType[] vertexTypes = new TPPLVertexType[maxNumVertices];
+        var vertexTypes = new TPPLVertexType[maxNumVertices];
         for (int i = 0; i < numVertices; i++)
         {
-            MonotoneVertex v = vertices[i];
-            MonotoneVertex vprev = vertices[v.Previous];
-            MonotoneVertex vnext = vertices[v.Next];
+            MonotoneVertex vtx = vertices[i];
+            MonotoneVertex vtxPrev = vertices[vtx.Previous];
+            MonotoneVertex vtxNext = vertices[vtx.Next];
 
-            if (Below(vprev.Point, v.Point) && Below(vnext.Point, v.Point))
+            if (Below(vtxPrev.Point, vtx.Point) && Below(vtxNext.Point, vtx.Point))
             {
-                vertexTypes[i] = TPPLPointUtil.IsConvex(vnext.Point, vprev.Point, v.Point) ?
-                    TPPLVertexType.Start : TPPLVertexType.Split;
+                vertexTypes[i] = TPPLPointUtil.IsConvex(vtxNext.Point, vtxPrev.Point, vtx.Point) ? TPPLVertexType.Start : TPPLVertexType.Split;
             }
-            else if (Below(v.Point, vprev.Point) && Below(v.Point, vnext.Point))
+            else if (Below(vtx.Point, vtxPrev.Point) && Below(vtx.Point, vtxNext.Point))
             {
-                vertexTypes[i] = TPPLPointUtil.IsConvex(vnext.Point, vprev.Point, v.Point) ?
-                    TPPLVertexType.End : TPPLVertexType.Merge;
+                vertexTypes[i] = TPPLPointUtil.IsConvex(vtxNext.Point, vtxPrev.Point, vtx.Point) ? TPPLVertexType.End : TPPLVertexType.Merge;
             }
             else
             {
@@ -267,121 +273,81 @@ partial class TPPLPartition
 
         for (int i = 0; i < numVertices; i++)
         {
-            int vindex = priority[i];
-            MonotoneVertex v = vertices[vindex];
-            int vindex2 = vindex;
-            MonotoneVertex v2 = v;
+            int vtxIdx = priority[i];
+            MonotoneVertex vtx = vertices[vtxIdx];
+            int vtxIdx2 = vtxIdx;
+            MonotoneVertex vtx2 = vtx;
 
-            switch (vertexTypes[vindex])
+            switch (vertexTypes[vtxIdx])
             {
                 case TPPLVertexType.Start:
-                ScanLineEdge newEdge = new()
                 {
-                    P1 = v.Point,
-                    P2 = vertices[v.Next].Point,
-                    Index = vindex
-                };
-                edgeTree.Add(newEdge);
-                edgeTreeIterators[vindex] = newEdge;
-                helpers[vindex] = vindex;
-                break;
-
+                    ScanLineEdge newEdge = new()
+                    {
+                        P1 = vtx.Point,
+                        P2 = vertices[vtx.Next].Point,
+                        Index = vtxIdx
+                    };
+                    edgeTree.Add(newEdge);
+                    edgeTreeIterators[vtxIdx] = newEdge;
+                    helpers[vtxIdx] = vtxIdx;
+                    break;
+                }
                 case TPPLVertexType.End:
-                if (!edgeTreeIterators.ContainsKey(v.Previous))
                 {
-                    error = true;
-                    break;
-                }
-                if (vertexTypes[helpers[v.Previous]] == TPPLVertexType.Merge)
-                {
-                    AddDiagonal(vertices, ref newNumVertices, vindex, helpers[v.Previous],
-                               vertexTypes, edgeTreeIterators, edgeTree, helpers);
-                }
-                edgeTree.Remove(edgeTreeIterators[v.Previous]);
-                break;
-
-                case TPPLVertexType.Split:
-                ScanLineEdge searchEdge = new() { P1 = v.Point, P2 = v.Point };
-                var edgeIter = edgeTree.GetViewBetween(edgeTree.Min, searchEdge).Max;
-                if (edgeIter == null)
-                {
-                    error = true;
-                    break;
-                }
-                AddDiagonal(vertices, ref newNumVertices, vindex, helpers[edgeIter.Index],
-                           vertexTypes, edgeTreeIterators, edgeTree, helpers);
-                vindex2 = newNumVertices - 2;
-                v2 = vertices[vindex2];
-                helpers[edgeIter.Index] = vindex;
-                newEdge = new ScanLineEdge
-                {
-                    P1 = v2.Point,
-                    P2 = vertices[v2.Next].Point,
-                    Index = vindex2
-                };
-                edgeTree.Add(newEdge);
-                edgeTreeIterators[vindex2] = newEdge;
-                helpers[vindex2] = vindex2;
-                break;
-
-                case TPPLVertexType.Merge:
-                if (!edgeTreeIterators.ContainsKey(v.Previous))
-                {
-                    error = true;
-                    break;
-                }
-                if (vertexTypes[helpers[v.Previous]] == TPPLVertexType.Merge)
-                {
-                    AddDiagonal(vertices, ref newNumVertices, vindex, helpers[v.Previous],
-                               vertexTypes, edgeTreeIterators, edgeTree, helpers);
-                    vindex2 = newNumVertices - 2;
-                }
-                edgeTree.Remove(edgeTreeIterators[v.Previous]);
-                searchEdge = new ScanLineEdge { P1 = v.Point, P2 = v.Point };
-                edgeIter = edgeTree.GetViewBetween(edgeTree.Min, searchEdge).Max;
-                if (edgeIter == null)
-                {
-                    error = true;
-                    break;
-                }
-                if (vertexTypes[helpers[edgeIter.Index]] == TPPLVertexType.Merge)
-                {
-                    AddDiagonal(vertices, ref newNumVertices, vindex2, helpers[edgeIter.Index],
-                               vertexTypes, edgeTreeIterators, edgeTree, helpers);
-                }
-                helpers[edgeIter.Index] = vindex2;
-                break;
-
-                case TPPLVertexType.Regular:
-                if (Below(v.Point, vertices[v.Previous].Point))
-                {
-                    if (!edgeTreeIterators.ContainsKey(v.Previous))
+                    if (!edgeTreeIterators.ContainsKey(vtx.Previous))
                     {
                         error = true;
                         break;
                     }
-                    if (vertexTypes[helpers[v.Previous]] == TPPLVertexType.Merge)
+                    if (vertexTypes[helpers[vtx.Previous]] == TPPLVertexType.Merge)
                     {
-                        AddDiagonal(vertices, ref newNumVertices, vindex, helpers[v.Previous],
+                        AddDiagonal(vertices, ref newNumVertices, vtxIdx, helpers[vtx.Previous],
                                    vertexTypes, edgeTreeIterators, edgeTree, helpers);
-                        vindex2 = newNumVertices - 2;
-                        v2 = vertices[vindex2];
                     }
-                    edgeTree.Remove(edgeTreeIterators[v.Previous]);
-                    newEdge = new ScanLineEdge
+                    edgeTree.Remove(edgeTreeIterators[vtx.Previous]);
+                    break;
+                }
+                case TPPLVertexType.Split:
+                {
+                    ScanLineEdge searchEdge = new() { P1 = vtx.Point, P2 = vtx.Point };
+                    var edgeIter = edgeTree.GetViewBetween(edgeTree.Min, searchEdge).Max;
+                    if (edgeIter == null)
                     {
-                        P1 = v2.Point,
-                        P2 = vertices[v2.Next].Point,
-                        Index = vindex2
+                        error = true;
+                        break;
+                    }
+                    AddDiagonal(vertices, ref newNumVertices, vtxIdx, helpers[edgeIter.Index], vertexTypes, edgeTreeIterators, edgeTree, helpers);
+                    vtxIdx2 = newNumVertices - 2;
+                    vtx2 = vertices[vtxIdx2];
+                    helpers[edgeIter.Index] = vtxIdx;
+                    var newEdge = new ScanLineEdge
+                    {
+                        P1 = vtx2.Point,
+                        P2 = vertices[vtx2.Next].Point,
+                        Index = vtxIdx2
                     };
                     edgeTree.Add(newEdge);
-                    edgeTreeIterators[vindex2] = newEdge;
-                    helpers[vindex2] = vindex;
+                    edgeTreeIterators[vtxIdx2] = newEdge;
+                    helpers[vtxIdx2] = vtxIdx2;
+                    break;
                 }
-                else
+                case TPPLVertexType.Merge:
                 {
-                    searchEdge = new ScanLineEdge { P1 = v.Point, P2 = v.Point };
-                    edgeIter = edgeTree.GetViewBetween(edgeTree.Min, searchEdge).Max;
+                    if (!edgeTreeIterators.ContainsKey(vtx.Previous))
+                    {
+                        error = true;
+                        break;
+                    }
+                    if (vertexTypes[helpers[vtx.Previous]] == TPPLVertexType.Merge)
+                    {
+                        AddDiagonal(vertices, ref newNumVertices, vtxIdx, helpers[vtx.Previous],
+                                   vertexTypes, edgeTreeIterators, edgeTree, helpers);
+                        vtxIdx2 = newNumVertices - 2;
+                    }
+                    edgeTree.Remove(edgeTreeIterators[vtx.Previous]);
+                    var searchEdge = new ScanLineEdge { P1 = vtx.Point, P2 = vtx.Point };
+                    var edgeIter = edgeTree.GetViewBetween(edgeTree.Min, searchEdge).Max;
                     if (edgeIter == null)
                     {
                         error = true;
@@ -389,12 +355,56 @@ partial class TPPLPartition
                     }
                     if (vertexTypes[helpers[edgeIter.Index]] == TPPLVertexType.Merge)
                     {
-                        AddDiagonal(vertices, ref newNumVertices, vindex, helpers[edgeIter.Index],
+                        AddDiagonal(vertices, ref newNumVertices, vtxIdx2, helpers[edgeIter.Index],
                                    vertexTypes, edgeTreeIterators, edgeTree, helpers);
                     }
-                    helpers[edgeIter.Index] = vindex;
+                    helpers[edgeIter.Index] = vtxIdx2;
+                    break;
                 }
-                break;
+                case TPPLVertexType.Regular:
+                {
+                    if (Below(vtx.Point, vertices[vtx.Previous].Point))
+                    {
+                        if (!edgeTreeIterators.ContainsKey(vtx.Previous))
+                        {
+                            error = true;
+                            break;
+                        }
+                        if (vertexTypes[helpers[vtx.Previous]] == TPPLVertexType.Merge)
+                        {
+                            AddDiagonal(vertices, ref newNumVertices, vtxIdx, helpers[vtx.Previous], vertexTypes, edgeTreeIterators, edgeTree, helpers);
+                            vtxIdx2 = newNumVertices - 2;
+                            vtx2 = vertices[vtxIdx2];
+                        }
+                        edgeTree.Remove(edgeTreeIterators[vtx.Previous]);
+                        var newEdge = new ScanLineEdge
+                        {
+                            P1 = vtx2.Point,
+                            P2 = vertices[vtx2.Next].Point,
+                            Index = vtxIdx2
+                        };
+                        edgeTree.Add(newEdge);
+                        edgeTreeIterators[vtxIdx2] = newEdge;
+                        helpers[vtxIdx2] = vtxIdx;
+                    }
+                    else
+                    {
+                        var searchEdge = new ScanLineEdge { P1 = vtx.Point, P2 = vtx.Point };
+                        var edgeIter = edgeTree.GetViewBetween(edgeTree.Min, searchEdge).Max;
+                        if (edgeIter == null)
+                        {
+                            error = true;
+                            break;
+                        }
+                        if (vertexTypes[helpers[edgeIter.Index]] == TPPLVertexType.Merge)
+                        {
+                            AddDiagonal(vertices, ref newNumVertices, vtxIdx, helpers[edgeIter.Index],
+                                       vertexTypes, edgeTreeIterators, edgeTree, helpers);
+                        }
+                        helpers[edgeIter.Index] = vtxIdx;
+                    }
+                    break;
+                }
             }
 
             if (error) break;
@@ -402,33 +412,33 @@ partial class TPPLPartition
 
         if (error) return false;
 
-        bool[] used = new bool[newNumVertices];
+        var used = new bool[newNumVertices];
         for (int i = 0; i < newNumVertices; i++)
         {
             if (used[i]) continue;
 
-            MonotoneVertex v = vertices[i];
-            MonotoneVertex vnext = vertices[v.Next];
+            MonotoneVertex vtx = vertices[i];
+            MonotoneVertex vtxNext = vertices[vtx.Next];
             int size = 1;
-            while (vnext != v)
+            while (vtxNext != vtx)
             {
-                vnext = vertices[vnext.Next];
+                vtxNext = vertices[vtxNext.Next];
                 size++;
             }
 
             var mpoly = new TPPLPoint[size];
-            v = vertices[i];
-            mpoly[0] = v.Point;
-            vnext = vertices[v.Next];
+            vtx = vertices[i];
+            mpoly[0] = vtx.Point;
+            vtxNext = vertices[vtx.Next];
             size = 1;
             used[i] = true;
-            used[v.Next] = true;
+            used[vtx.Next] = true;
 
-            while (vnext != v)
+            while (vtxNext != vtx)
             {
-                mpoly[size] = vnext.Point;
-                used[vnext.Next] = true;
-                vnext = vertices[vnext.Next];
+                mpoly[size] = vtxNext.Point;
+                used[vtxNext.Next] = true;
+                vtxNext = vertices[vtxNext.Next];
                 size++;
             }
             monotonePolys.Add(mpoly);
@@ -437,23 +447,6 @@ partial class TPPLPartition
         return true;
     }
 
-    public static bool Triangulate_MONO(List<TPPLPoint[]> inPolys, out List<TPPLPoint[]> triangles)
-    {
-        if (!MonotonePartition(inPolys, out var monotone))
-        {
-            triangles = [];
-            return false;
-        }
-        foreach (var poly in monotone)
-            if (!TriangulateMonotone(poly, out triangles))
-                return false;
-        triangles = [];
-        return true;
-    }
 
-    public static bool Triangulate_MONO(TPPLPoint[] poly, out List<TPPLPoint[]> triangles)
-    {
-        return Triangulate_MONO([poly], out triangles);
-    }
 
 }

@@ -54,7 +54,6 @@ public static class TPPLPointUtil
     public static TPPLPoint[] Triangle(TPPLPoint p1, TPPLPoint p2, TPPLPoint p3) => [p1, p2, p3];
     #endregion
 
-
     public static TPPLPoint Normalize(TPPLPoint p)
     {
         float n = MathF.Sqrt(p.X * p.X + p.Y * p.Y);
@@ -91,9 +90,9 @@ public static class TPPLPointUtil
     public static bool IsConvex(TPPLPoint p1, TPPLPoint p2, TPPLPoint p3) => Cross2D(p1, p2, p3) > 0;
     public static bool IsReflex(TPPLPoint p1, TPPLPoint p2, TPPLPoint p3) => Cross2D(p1, p2, p3) < 0;
 
-    public static bool IsInside(TPPLPoint p1, TPPLPoint p2, TPPLPoint p3, TPPLPoint p) => 
+    public static bool IsInside(TPPLPoint p1, TPPLPoint p2, TPPLPoint p3, TPPLPoint p) =>
         !IsConvex(p1, p, p2) && !IsConvex(p2, p, p3) && !IsConvex(p3, p, p1);
 
-    public static bool InCone(TPPLPoint p1, TPPLPoint p2, TPPLPoint p3, TPPLPoint p) => 
+    public static bool InCone(TPPLPoint p1, TPPLPoint p2, TPPLPoint p3, TPPLPoint p) =>
         IsConvex(p1, p2, p3) ? IsConvex(p1, p2, p) && IsConvex(p2, p3, p) : IsConvex(p1, p2, p) || IsConvex(p2, p3, p);
 }
