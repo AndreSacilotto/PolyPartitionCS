@@ -11,11 +11,11 @@ partial class TPPLPartition
     #region Helpers Triangulate_EC
     private static void UpdateVertex(PartitionVertex vtx, PartitionVertex[] vertices)
     {
-        vtx.IsConvex = TPPLPointUtil.IsConvex(vtx.Previous.Point, vtx.Point, vtx.Next.Point);
+        vtx.UpdateVertexReflexity();
 
         var vec1 = TPPLPointUtil.Normalize(vtx.Previous.Point - vtx.Point);
         var vec3 = TPPLPointUtil.Normalize(vtx.Next.Point - vtx.Point);
-        vtx.Angle = vec1.X * vec3.X + vec1.Y * vec3.Y;
+        vtx.Angle = TPPLPoint.Dot(vec1, vec3);
 
         if (vtx.IsConvex)
         {
@@ -37,35 +37,6 @@ partial class TPPLPartition
         }
     }
 
-    private static PartitionVertex[] PartitionFromPoly(TPPLPoint[] poly)
-    {
-        var len = poly.Length;
-        PartitionVertex[] vertices = new PartitionVertex[len];
-        for (int i = 0; i < len; i++)
-        {
-            vertices[i] = new(null!, null!) // Temporary null values
-            {
-                IsActive = true,
-                Point = poly[i],
-            };
-        }
-
-        // back loop
-        vertices[0].Previous = vertices[^1];
-        vertices[0].Next = vertices[1];
-
-        for (int i = 1; i < len - 1; i++)
-        {
-            vertices[i].Previous = vertices[i - 1];
-            vertices[i].Next = vertices[i + 1];
-        }
-
-        // front loop
-        vertices[^1].Previous = vertices[^2];
-        vertices[^1].Next = vertices[0];
-
-        return vertices;
-    }
     #endregion
 
     public static bool Triangulate_EC(List<TPPLPoint[]> inPolys, out List<TPPLPoint[]> triangles, TPPLOrientation holeOrientation = TPPLOrientation.CCW)
@@ -89,7 +60,7 @@ partial class TPPLPartition
             return true;
         }
 
-        PartitionVertex[] vertices = PartitionFromPoly(poly);
+        var vertices = PartitionVertex.PartitionsFromPoly(poly);
 
         for (int i = 0; i < len; i++)
             UpdateVertex(vertices[i], vertices);

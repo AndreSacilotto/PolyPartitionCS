@@ -1,17 +1,52 @@
 ﻿namespace PolyPartition;
 
-internal class PartitionVertex(PartitionVertex prev, PartitionVertex next)
+internal class PartitionVertex
 {
     public bool IsActive;
     public bool IsConvex;
     public bool IsEar;
     public TPPLPoint Point;
     public float Angle;
-    public PartitionVertex Previous = prev;
-    public PartitionVertex Next = next;
+    public PartitionVertex Previous;
+    public PartitionVertex Next;
+
+    private PartitionVertex()
+    {
+        Previous = null!;
+        Next = null!;
+    }
 
     public bool InCone(TPPLPoint p) => TPPLPointUtil.InCone(Previous.Point, Point, Next.Point, p);
     public void UpdateVertexReflexity() => IsConvex = TPPLPointUtil.IsConvex(Previous.Point, Point, Next.Point);
+    public static PartitionVertex[] PartitionsFromPoly(TPPLPoint[] poly)
+    {
+        var len = poly.Length;
+        PartitionVertex[] vertices = new PartitionVertex[len];
+        for (int i = 0; i < len; i++)
+        {
+            vertices[i] = new() // Temporary null values
+            {
+                IsActive = true,
+                Point = poly[i],
+            };
+        }
+
+        // back loop
+        vertices[0].Previous = vertices[^1];
+        vertices[0].Next = vertices[1];
+
+        for (int i = 1; i < len - 1; i++)
+        {
+            vertices[i].Previous = vertices[i - 1];
+            vertices[i].Next = vertices[i + 1];
+        }
+
+        // front loop
+        vertices[^1].Previous = vertices[^2];
+        vertices[^1].Next = vertices[0];
+
+        return vertices;
+    }
 }
 
 internal class MonotoneVertex

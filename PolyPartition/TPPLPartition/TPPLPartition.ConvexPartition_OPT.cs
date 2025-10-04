@@ -138,36 +138,27 @@ partial class TPPLPartition
     }
     public static bool ConvexPartition_OPT(TPPLPoint[] poly, List<TPPLPoint[]> parts)
     {
-        int vertexCount = poly.Length;
-        if (vertexCount < 3) return false;
+        int len = poly.Length;
+        if (len < 3) return false;
 
-        PartitionVertex[] vertices = new PartitionVertex[vertexCount];
-        DPState2[][] dpstates = new DPState2[vertexCount][];
+        DPState2[][] dpstates = new DPState2[len][];
 
-        for (int i = 0; i < vertexCount; i++)
+        for (int i = 0; i < len; i++)
         {
-            dpstates[i] = new DPState2[vertexCount];
-            for (int j = 0; j < vertexCount; j++)
+            dpstates[i] = new DPState2[len];
+            for (int j = 0; j < len; j++)
                 dpstates[i][j] = new DPState2();
         }
 
-        // Initialize vertices
-        for (int i = 0; i < vertexCount; i++)
-        {
-            vertices[i] = new(vertices[i == 0 ? vertexCount - 1 : i - 1], vertices[i == vertexCount - 1 ? 0 : i + 1])
-            {
-                Point = poly[i],
-                IsActive = true
-            };
-        }
+        var vertices = PartitionVertex.PartitionsFromPoly(poly);
 
-        for (int i = 1; i < vertexCount; i++)
+        for (int i = 1; i < len; i++)
             vertices[i].UpdateVertexReflexity();
 
         // Initialize states
-        for (int startIndex = 0; startIndex < vertexCount - 1; startIndex++)
+        for (int startIndex = 0; startIndex < len - 1; startIndex++)
         {
-            for (int endIndex = startIndex + 1; endIndex < vertexCount; endIndex++)
+            for (int endIndex = startIndex + 1; endIndex < len; endIndex++)
             {
                 dpstates[startIndex][endIndex].Visible = true;
                 dpstates[startIndex][endIndex].Weight = endIndex == startIndex + 1 ? 0 : int.MaxValue;
@@ -180,10 +171,10 @@ partial class TPPLPartition
                         continue;
                     }
 
-                    for (int edgeStart = 0; edgeStart < vertexCount; edgeStart++)
+                    for (int edgeStart = 0; edgeStart < len; edgeStart++)
                     {
                         TPPLPoint edgePoint1 = poly[edgeStart];
-                        TPPLPoint edgePoint2 = poly[edgeStart == vertexCount - 1 ? 0 : edgeStart + 1];
+                        TPPLPoint edgePoint2 = poly[edgeStart == len - 1 ? 0 : edgeStart + 1];
                         if (TPPLPointUtil.Intersects(poly[startIndex], poly[endIndex], edgePoint1, edgePoint2))
                         {
                             dpstates[startIndex][endIndex].Visible = false;
@@ -194,7 +185,7 @@ partial class TPPLPartition
             }
         }
 
-        for (int startIndex = 0; startIndex < vertexCount - 2; startIndex++)
+        for (int startIndex = 0; startIndex < len - 2; startIndex++)
         {
             int endIndex = startIndex + 2;
             if (dpstates[startIndex][endIndex].Visible)
@@ -204,12 +195,12 @@ partial class TPPLPartition
             }
         }
 
-        dpstates[0][vertexCount - 1].Visible = true;
+        dpstates[0][len - 1].Visible = true;
         vertices[0].IsConvex = false;
 
-        for (int gap = 3; gap < vertexCount; gap++)
+        for (int gap = 3; gap < len; gap++)
         {
-            for (int startVertex = 0; startVertex < vertexCount - gap; startVertex++)
+            for (int startVertex = 0; startVertex < len - gap; startVertex++)
             {
                 if (vertices[startVertex].IsConvex) continue;
                 int endVertex = startVertex + gap;
@@ -232,7 +223,7 @@ partial class TPPLPartition
                 }
             }
 
-            for (int endVertex = gap; endVertex < vertexCount; endVertex++)
+            for (int endVertex = gap; endVertex < len; endVertex++)
             {
                 if (vertices[endVertex].IsConvex) continue;
                 int startVertex = endVertex - gap;
@@ -250,7 +241,7 @@ partial class TPPLPartition
 
         // Recover solution
         Queue<Diagonal> diagonals = new(1);
-        diagonals.Enqueue(new Diagonal { Index1 = 0, Index2 = vertexCount - 1 });
+        diagonals.Enqueue(new Diagonal { Index1 = 0, Index2 = len - 1 });
 
         while (diagonals.Count > 0)
         {
