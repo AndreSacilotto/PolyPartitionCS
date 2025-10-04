@@ -1,6 +1,5 @@
-﻿// Orinal Copyright Notice
-/*************************************************************************/
-/* Copyright (c) 2011-2021 Ivan Fratric and contributors.                */
+﻿/*************************************************************************/
+/* (Original) Copyright (c) 2011-2021 Ivan Fratric and contributors.     */
 /*                                                                       */
 /* Permission is hereby granted, free of charge, to any person obtaining */
 /* a copy of this software and associated documentation files (the       */
@@ -22,6 +21,8 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                */
 /*************************************************************************/
 
+//global using Godot;
+
 global using System;
 global using System.Collections.Generic;
 
@@ -35,19 +36,3 @@ public static class UtilShared
 {
     public const System.Runtime.CompilerServices.MethodImplOptions INLINE = System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining;
 }
-
-/* NOTICEABLE CODE CHANGES
-
-- Originally designed for use with Godot4 + C#, it supports up to .net 9. (sorry unity, not really). 
-
-- Structure has been modified; classes are now more isolated.
-
-- System.Numerics is used instead of TPPLPoint to leverage SIMD instructions.
-  - This change removes an internally unused Id field (some may expect it).
-  - The implementation is therefore limited to single-precision floats.
-
-- The use of (out) parameters has been adopted instead of requiring a List to be passed,
-  improving readability.
-
-*/
-

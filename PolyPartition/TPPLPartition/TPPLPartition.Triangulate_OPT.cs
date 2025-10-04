@@ -2,12 +2,12 @@
 
 partial class TPPLPartition
 {
-    public static bool Triangulate_OPT(TPPLPoly poly, out List<TPPLPoly> triangles)
+    public static bool Triangulate_OPT(TPPLPoint[] poly, out List<TPPLPoint[]> triangles)
     {
         triangles = [];
-        int len = poly.Count;
+        int len = poly.Length;
 
-        if (!poly.IsValid) return false;
+        if (len < 3) return false;
 
         DPState[][] dpstates = new DPState[len][];
         for (int i = 1; i < len; i++)
@@ -34,7 +34,7 @@ partial class TPPLPartition
                     // Visibility check
                     TPPLPoint p3 = poly[i == 0 ? len - 1 : i - 1];
                     TPPLPoint p4 = poly[i == len - 1 ? 0 : i + 1];
-                    if (!TPPLPointExt.InCone(p3, p1, p4, p2))
+                    if (!TPPLPointUtil.InCone(p3, p1, p4, p2))
                     {
                         dpstates[j][i].Visible = false;
                         continue;
@@ -42,7 +42,7 @@ partial class TPPLPartition
 
                     p3 = poly[j == 0 ? len - 1 : j - 1];
                     p4 = poly[j == len - 1 ? 0 : j + 1];
-                    if (!TPPLPointExt.InCone(p3, p2, p4, p1))
+                    if (!TPPLPointUtil.InCone(p3, p2, p4, p1))
                     {
                         dpstates[j][i].Visible = false;
                         continue;
@@ -52,7 +52,7 @@ partial class TPPLPartition
                     {
                         p3 = poly[k];
                         p4 = poly[k == len - 1 ? 0 : k + 1];
-                        if (TPPLPointExt.Intersects(p1, p2, p3, p4))
+                        if (TPPLPointUtil.Intersects(p1, p2, p3, p4))
                         {
                             dpstates[j][i].Visible = false;
                             break;
@@ -80,8 +80,8 @@ partial class TPPLPartition
                     if (!dpstates[k][i].Visible || !dpstates[j][k].Visible)
                         continue;
 
-                    float d1 = k <= i + 1 ? 0 : TPPLPointExt.Distance(poly[i], poly[k]);
-                    float d2 = j <= k + 1 ? 0 : TPPLPointExt.Distance(poly[k], poly[j]);
+                    float d1 = k <= i + 1 ? 0 : TPPLPointUtil.Distance(poly[i], poly[k]);
+                    float d2 = j <= k + 1 ? 0 : TPPLPointUtil.Distance(poly[k], poly[j]);
                     float weight = dpstates[k][i].Weight + dpstates[j][k].Weight + d1 + d2;
 
                     if (bestVertex == -1 || weight < minWeight)
@@ -110,7 +110,7 @@ partial class TPPLPartition
             if (bestVertex == -1)
                 return false;
 
-            TPPLPoly triangle = new(poly[diagonal.Index1], poly[bestVertex], poly[diagonal.Index2]);
+            TPPLPoint[] triangle = TPPLPointUtil.Triangle(poly[diagonal.Index1], poly[bestVertex], poly[diagonal.Index2]);
             triangles.Add(triangle);
 
             if (bestVertex > diagonal.Index1 + 1)

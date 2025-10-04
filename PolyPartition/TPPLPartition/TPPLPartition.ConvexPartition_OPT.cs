@@ -47,7 +47,7 @@ partial class TPPLPartition
             for (int idx = pairs.Count - 1; idx >= 0; idx--)
             {
                 var iter = pairs[idx];
-                if (!TPPLPointExt.IsReflex(vertices[iter.Index2].Point, vertices[j].Point, vertices[k].Point))
+                if (!TPPLPointUtil.IsReflex(vertices[iter.Index2].Point, vertices[j].Point, vertices[k].Point))
                     lastIterIndex = idx;
                 else
                     break;
@@ -60,7 +60,7 @@ partial class TPPLPartition
             else
             {
                 var lastIter = pairs[lastIterIndex];
-                if (TPPLPointExt.IsReflex(vertices[k].Point, vertices[i].Point, vertices[lastIter.Index1].Point))
+                if (TPPLPointUtil.IsReflex(vertices[k].Point, vertices[i].Point, vertices[lastIter.Index1].Point))
                 {
                     w++;
                 }
@@ -91,19 +91,19 @@ partial class TPPLPartition
         {
             var pairs = dpstates[j][k].Pairs;
 
-            if (pairs.Count > 0 && !TPPLPointExt.IsReflex(vertices[i].Point, vertices[j].Point, vertices[pairs[0].Index1].Point))
+            if (pairs.Count > 0 && !TPPLPointUtil.IsReflex(vertices[i].Point, vertices[j].Point, vertices[pairs[0].Index1].Point))
             {
                 int lastIterIndex = 0;
                 for (int idx = 0; idx < pairs.Count; idx++)
                 {
-                    if (!TPPLPointExt.IsReflex(vertices[idx].Point, vertices[j].Point, vertices[pairs[idx].Index1].Point))
+                    if (!TPPLPointUtil.IsReflex(vertices[idx].Point, vertices[j].Point, vertices[pairs[idx].Index1].Point))
                         lastIterIndex = idx;
                     else
                         break;
                 }
 
                 var lastIter = pairs[lastIterIndex];
-                if (TPPLPointExt.IsReflex(vertices[lastIter.Index2].Point, vertices[k].Point, vertices[i].Point))
+                if (TPPLPointUtil.IsReflex(vertices[lastIter.Index2].Point, vertices[k].Point, vertices[i].Point))
                     w++;
                 else
                     top = lastIter.Index2;
@@ -119,12 +119,12 @@ partial class TPPLPartition
 
     #endregion
 
-    public static bool ConvexPartition_OPT(TPPLPoly poly, out List<TPPLPoly> parts)
+    public static bool ConvexPartition_OPT(TPPLPoint[] poly, out List<TPPLPoint[]> parts)
     {
         parts = [];
 
-        int len = poly.Count;
-        if (!poly.IsValid) return false;
+        int len = poly.Length;
+        if (len < 3) return false;
 
         PartitionVertex[] vertices = new PartitionVertex[len];
         DPState2[][] dpstates = new DPState2[len][];
@@ -169,7 +169,7 @@ partial class TPPLPartition
                     {
                         TPPLPoint p3 = poly[k];
                         TPPLPoint p4 = poly[k == len - 1 ? 0 : k + 1];
-                        if (TPPLPointExt.Intersects(poly[i], poly[j], p3, p4))
+                        if (TPPLPointUtil.Intersects(poly[i], poly[j], p3, p4))
                         {
                             dpstates[i][j].Visible = false;
                             break;
@@ -258,7 +258,7 @@ partial class TPPLPartition
 
             List<int> indices = [diagonal.Index1, j, diagonal.Index2];
             indices.Sort();
-            TPPLPoly newPoly = new(indices.Count);
+            var newPoly = new TPPLPoint[indices.Count];
             for (int i = 0; i < indices.Count; i++)
                 newPoly[i] = vertices[indices[i]].Point;
             parts.Add(newPoly);

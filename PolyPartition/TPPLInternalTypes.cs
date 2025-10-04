@@ -10,8 +10,8 @@ internal class PartitionVertex(PartitionVertex prev, PartitionVertex next)
     public PartitionVertex Previous = prev;
     public PartitionVertex Next = next;
 
-    public bool InCone(TPPLPoint p) => TPPLPointExt.InCone(Previous.Point, Point, Next.Point, p);
-    public void UpdateVertexReflexity() => IsConvex = TPPLPointExt.IsConvex(Previous.Point, Point, Next.Point);
+    public bool InCone(TPPLPoint p) => TPPLPointUtil.InCone(Previous.Point, Point, Next.Point, p);
+    public void UpdateVertexReflexity() => IsConvex = TPPLPointUtil.IsConvex(Previous.Point, Point, Next.Point);
 }
 
 internal class MonotoneVertex
@@ -72,12 +72,12 @@ internal class ScanLineEdge : IComparable<ScanLineEdge>
         {
             if (P1.Y == P2.Y)
                 return P1.Y < other.P1.Y ? -1 : 1;
-            return TPPLPointExt.IsConvex(P1, P2, other.P1) ? -1 : 1;
+            return TPPLPointUtil.IsConvex(P1, P2, other.P1) ? -1 : 1;
         }
         if (P1.Y == P2.Y)
-            return !TPPLPointExt.IsConvex(other.P1, other.P2, P1) ? -1 : 1;
+            return !TPPLPointUtil.IsConvex(other.P1, other.P2, P1) ? -1 : 1;
         if (P1.Y < other.P1.Y)
-            return !TPPLPointExt.IsConvex(other.P1, other.P2, P1) ? -1 : 1;
-        return TPPLPointExt.IsConvex(P1, P2, other.P1) ? -1 : 1;
+            return !TPPLPointUtil.IsConvex(other.P1, other.P2, P1) ? -1 : 1;
+        return TPPLPointUtil.IsConvex(P1, P2, other.P1) ? -1 : 1;
     }
 }
