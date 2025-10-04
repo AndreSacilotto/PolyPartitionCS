@@ -1,5 +1,10 @@
 ﻿namespace PolyPartition;
 
+//Triangulation by partition into monotone polygons
+//Complexity: O(n* log(n))/O(n)
+//Holes: Yes
+//Solution: Poor, many thin triangles are created in most cases
+
 partial class TPPLPartition
 {
     #region Helper MonotonePartition
@@ -446,7 +451,5 @@ partial class TPPLPartition
 
         return true;
     }
-
-
 
 }

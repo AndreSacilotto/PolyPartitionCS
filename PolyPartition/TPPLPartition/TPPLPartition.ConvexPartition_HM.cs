@@ -1,4 +1,10 @@
 ﻿namespace PolyPartition;
+
+//Convex partition using Hertel-Mehlhorn algorithm
+//Complexity: O(n^2)/O(n)
+//Holes: Yes, by calling RemoveHoles.
+//Solution: Optimal, even though it creates 4 times the minimum number of convex polygons.
+
 partial class TPPLPartition
 {
     public static bool ConvexPartition_HM(List<TPPLPoint[]> inPolys, out List<TPPLPoint[]> parts, TPPLOrientation holeOrientation = TPPLOrientation.CCW)

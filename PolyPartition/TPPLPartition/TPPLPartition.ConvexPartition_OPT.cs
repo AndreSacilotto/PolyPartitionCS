@@ -1,5 +1,10 @@
 ﻿namespace PolyPartition;
 
+//Optimal convex partition using dynamic programming algorithm by Keil and Snoeyink
+//Complexity: O(n^3)/O(n^3)
+//Holes: No. Calling RemoveHoles makes the solution non-optimal.
+//Solution: Optimal, a minimum number of convex polygons is produced
+
 partial class TPPLPartition
 {
     #region Helper functions for ConvexPartition_OPT
@@ -119,10 +124,20 @@ partial class TPPLPartition
 
     #endregion
 
-    public static bool ConvexPartition_OPT(TPPLPoint[] poly, out List<TPPLPoint[]> parts)
+    /// <summary>Non-Optimal</summary>
+    public static bool ConvexPartition_OPT(List<TPPLPoint[]> inPolys, out List<TPPLPoint[]> parts, TPPLOrientation holeOrientation = TPPLOrientation.CCW)
     {
         parts = [];
+        if (!RemoveHoles(inPolys, out var outPolys, holeOrientation))
+            return false;
+        foreach (var poly in outPolys)
+            if (!ConvexPartition_OPT(poly, parts))
+                return false;
+        return true;
 
+    }
+    public static bool ConvexPartition_OPT(TPPLPoint[] poly, List<TPPLPoint[]> parts)
+    {
         int vertexCount = poly.Length;
         if (vertexCount < 3) return false;
 

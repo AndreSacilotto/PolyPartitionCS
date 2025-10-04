@@ -4,21 +4,17 @@ namespace PolyPartition;
 
 public static partial class TPPLPartition
 {
-    //public static void PrintArray2D<T>(IEnumerable<T[]> values, string separator = "\t")
+    //public static void PrintArray2D<T>(IEnumerable<T[]> values, string separator = ", ")
     //{
     //    foreach (var val in values)
-    //    {
-    //        string str = "";
-    //        foreach (var item in val)
-    //            str += item + separator;
-    //        GD.PrintT(str.Substring(0, str.Length - separator.Length));
-    //    }
+    //        PrintArray(val, separator);
     //}
-
-    //public static void PrintArray<T>(IEnumerable<T> values)
+    //public static void PrintArray<T>(IEnumerable<T> values, string separator = ", ")
     //{
-    //    foreach (var val in values)
-    //        GD.PrintT(val);
+    //    string str = "";
+    //    foreach (var item in values)
+    //        str += item + separator;
+    //    Godot.GD.Print(str.Substring(0, str.Length - separator.Length));
     //}
 
     private record PolyHole(TPPLPoint[] Polygon, bool IsHole)

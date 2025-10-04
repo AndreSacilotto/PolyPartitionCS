@@ -1,6 +1,11 @@
 ﻿
 namespace PolyPartition;
 
+//Triangulation by ear clipping
+//Complexity: O(n^2)/O(n)
+//Holes: Yes, by calling RemoveHoles
+//Solution: Satisfactory in most cases
+
 partial class TPPLPartition
 {
     #region Helpers Triangulate_EC

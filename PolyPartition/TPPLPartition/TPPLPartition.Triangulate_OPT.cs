@@ -1,10 +1,26 @@
 ﻿namespace PolyPartition;
 
+//Optimal triangulation in terms of edge length using dynamic programming algorithm
+//Complexity: O(n^3)/O(n^2)
+//Holes: No. Calling RemoveHoles makes the solution non-optimal.
+//Solution: Optimal in terms of minimal edge length
+
 partial class TPPLPartition
 {
-    public static bool Triangulate_OPT(TPPLPoint[] poly, out List<TPPLPoint[]> triangles)
+    /// <summary>Non-Optimal</summary>
+    public static bool Triangulate_OPT(List<TPPLPoint[]> inPolys, out List<TPPLPoint[]> triangles, TPPLOrientation holeOrientation = TPPLOrientation.CCW)
     {
         triangles = [];
+        if (!RemoveHoles(inPolys, out var outPolys, holeOrientation))
+            return false;
+        foreach (var poly in outPolys)
+            if (!Triangulate_OPT(poly, triangles))
+                return false;
+        return true;
+    }
+
+    public static bool Triangulate_OPT(TPPLPoint[] poly, List<TPPLPoint[]> triangles)
+    {
         int len = poly.Length;
 
         if (len < 3) return false;

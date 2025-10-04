@@ -5,21 +5,6 @@ namespace PolyPartition;
 public static class TPPLPointUtil
 {
     #region Array
-    //public static TPPLPoint[] Copy(TPPLPoint[] polygon)
-    //{
-    //    var newPoints = new TPPLPoint[polygon.Length];
-    //    polygon.CopyTo(newPoints, 0);
-    //    return newPoints;
-    //}
-    //public static List<TPPLPoint[]> Copy(List<TPPLPoint[]> polygons)
-    //{
-    //    var len = polygons.Count;
-    //    List<TPPLPoint[]> list = new(len);
-    //    for (int i = 0; i < len; i++)
-    //        list[i] = Copy(polygons[i]);
-    //    return list;
-    //}
-
     public static bool IsValidPolygon(ReadOnlySpan<TPPLPoint> points) => points.Length >= 3;
 
     private static float Area(ReadOnlySpan<TPPLPoint> points)
