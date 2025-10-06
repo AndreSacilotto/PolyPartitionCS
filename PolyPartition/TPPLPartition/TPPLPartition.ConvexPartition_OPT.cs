@@ -52,7 +52,7 @@ partial class TPPLPartition
             for (int pairIndex = diagonalPairs.Count - 1; pairIndex >= 0; pairIndex--)
             {
                 var currentPair = diagonalPairs[pairIndex];
-                if (!TPPLPointUtil.IsReflex(vertices[currentPair.Index2].Point, vertices[middleVertex].Point, vertices[endVertex].Point))
+                if (!TPPLUtil.IsReflex(vertices[currentPair.Index2].Point, vertices[middleVertex].Point, vertices[endVertex].Point))
                     lastValidPairIndex = pairIndex;
                 else
                     break;
@@ -65,7 +65,7 @@ partial class TPPLPartition
             else
             {
                 var lastValidPair = diagonalPairs[lastValidPairIndex];
-                if (TPPLPointUtil.IsReflex(vertices[endVertex].Point, vertices[startVertex].Point, vertices[lastValidPair.Index1].Point))
+                if (TPPLUtil.IsReflex(vertices[endVertex].Point, vertices[startVertex].Point, vertices[lastValidPair.Index1].Point))
                 {
                     totalWeight++;
                 }
@@ -96,19 +96,19 @@ partial class TPPLPartition
         {
             var diagonalPairs = dpstates[middleVertex][endVertex].Pairs;
 
-            if (diagonalPairs.Count > 0 && !TPPLPointUtil.IsReflex(vertices[startVertex].Point, vertices[middleVertex].Point, vertices[diagonalPairs[0].Index1].Point))
+            if (diagonalPairs.Count > 0 && !TPPLUtil.IsReflex(vertices[startVertex].Point, vertices[middleVertex].Point, vertices[diagonalPairs[0].Index1].Point))
             {
                 int lastValidPairIndex = 0;
                 for (int pairIndex = 0; pairIndex < diagonalPairs.Count; pairIndex++)
                 {
-                    if (!TPPLPointUtil.IsReflex(vertices[pairIndex].Point, vertices[middleVertex].Point, vertices[diagonalPairs[pairIndex].Index1].Point))
+                    if (!TPPLUtil.IsReflex(vertices[pairIndex].Point, vertices[middleVertex].Point, vertices[diagonalPairs[pairIndex].Index1].Point))
                         lastValidPairIndex = pairIndex;
                     else
                         break;
                 }
 
                 var lastValidPair = diagonalPairs[lastValidPairIndex];
-                if (TPPLPointUtil.IsReflex(vertices[lastValidPair.Index2].Point, vertices[endVertex].Point, vertices[startVertex].Point))
+                if (TPPLUtil.IsReflex(vertices[lastValidPair.Index2].Point, vertices[endVertex].Point, vertices[startVertex].Point))
                     totalWeight++;
                 else
                     topVertex = lastValidPair.Index2;
@@ -125,17 +125,18 @@ partial class TPPLPartition
     #endregion
 
     /// <summary>Non-Optimal</summary>
-    public static bool ConvexPartition_OPT(List<TPPLPoint[]> inPolys, out List<TPPLPoint[]> parts, TPPLOrientation holeOrientation = TPPLOrientation.CCW)
+    public static bool ConvexPartition_OPT(TPPLPolygonList inPolys, out List<TPPLPoint[]> parts) => ConvexPartition_OPT(inPolys, parts = []);
+    /// <summary>Non-Optimal</summary>
+    public static bool ConvexPartition_OPT(TPPLPolygonList inPolys, List<TPPLPoint[]> parts)
     {
-        parts = [];
-        if (!RemoveHoles(inPolys, out var outPolys, holeOrientation))
+        if (!RemoveHoles(inPolys, out var outPolys))
             return false;
         foreach (var poly in outPolys)
             if (!ConvexPartition_OPT(poly, parts))
                 return false;
         return true;
-
     }
+
     public static bool ConvexPartition_OPT(TPPLPoint[] poly, List<TPPLPoint[]> parts)
     {
         int len = poly.Length;
@@ -175,7 +176,7 @@ partial class TPPLPartition
                     {
                         TPPLPoint edgePoint1 = poly[edgeStart];
                         TPPLPoint edgePoint2 = poly[edgeStart == len - 1 ? 0 : edgeStart + 1];
-                        if (TPPLPointUtil.Intersects(poly[startIndex], poly[endIndex], edgePoint1, edgePoint2))
+                        if (TPPLUtil.Intersects(poly[startIndex], poly[endIndex], edgePoint1, edgePoint2))
                         {
                             dpstates[startIndex][endIndex].Visible = false;
                             break;

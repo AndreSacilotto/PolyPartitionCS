@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace PolyPartition;
+﻿namespace PolyPartition;
 
 public static partial class TPPLPartition
 {
@@ -17,155 +15,147 @@ public static partial class TPPLPartition
     //    Godot.GD.Print(str.Substring(0, str.Length - separator.Length));
     //}
 
-    private record PolyHole(TPPLPoint[] Polygon, bool IsHole)
+    public static bool Partition(TPPLPartitionMethod method, TPPLPolygonList inPolys, out List<TPPLPoint[]> outPolys) => Partition(method, inPolys, outPolys = []);
+    public static bool Partition(TPPLPartitionMethod method, TPPLPolygonList inPolys, List<TPPLPoint[]> outPolys)
     {
-        public int Count => Polygon.Length;
-        public TPPLPoint this[int index] => Polygon[index];
+        return method switch
+        {
+            TPPLPartitionMethod.ConvexPartitionHM => ConvexPartition_HM(inPolys, outPolys),
+            TPPLPartitionMethod.ConvexPartitionOPT => ConvexPartition_OPT(inPolys, outPolys),
+            TPPLPartitionMethod.TriangulateEC => Triangulate_EC(inPolys, outPolys),
+            TPPLPartitionMethod.TriagulateMONO => Triangulate_MONO(inPolys.ToPoints(), outPolys),
+            TPPLPartitionMethod.TriangulateOPT => Triangulate_OPT(inPolys, outPolys),
+            _ => false,
+        };
     }
 
-    public static bool RemoveHoles(in List<TPPLPoint[]> inPolys, [NotNullWhen(true)] out List<TPPLPoint[]>? outPolys, TPPLOrientation holeOrientation)
+    public static bool RemoveHoles(TPPLPolygonList polys, out List<TPPLPoint[]> outPolys) => RemoveHoles(polys, outPolys = []);
+
+    /// <summary> Eliminates holes from polygons by merging them with their containing outer polygons </summary>
+    /// <param name="polys">List of polygons with hole defined - WARN: It will be modified</param>
+    /// <param name="outPolys">shallow copy</param>
+    /// <returns>If had success on removing the holes</returns>
+    public static bool RemoveHoles(TPPLPolygonList polys, List<TPPLPoint[]> outPolys)
     {
-        var polys = new List<PolyHole>(inPolys.Count);
-
-        bool hasHoles = false;
-        for (int i = 0; i < inPolys.Count; i++)
+        if (polys.HasHoles)
         {
-            var poly = inPolys[i];
-            var orientation = TPPLPointUtil.GetOrientation(poly);
-            if (orientation == holeOrientation)
+            while (true)
             {
-                polys.Add(new PolyHole([.. poly], true));
-                hasHoles = true;
-            }
-            else
-                polys.Add(new PolyHole([.. poly], false));
-        }
+                int holeIndex = -1;
+                int holePointIndex = 0;
 
-        if (!hasHoles)
-        {
-            outPolys = [.. inPolys];
-            return true;
-        }
-
-        while (true)
-        {
-            int holeIndex = -1;
-            int holePointIndex = 0;
-
-            for (int i = 0; i < polys.Count; i++)
-            {
-                var poly = polys[i];
-                if (!poly.IsHole) continue;
-
-                if (holeIndex == -1)
+                for (int i = 0; i < polys.Count; i++)
                 {
-                    holeIndex = i;
-                    holePointIndex = 0;
-                }
+                    var polyI = polys[i];
 
-                for (int j = 0; j < poly.Count; j++)
-                {
-                    if (poly[j].X > polys[holeIndex][holePointIndex].X)
+                    if (!polyI.IsHole) continue;
+
+                    if (holeIndex == -1)
                     {
                         holeIndex = i;
-                        holePointIndex = j;
-                    }
-                }
-            }
-
-            if (holeIndex == -1) break;
-
-            var holePoint = polys[holeIndex][holePointIndex];
-
-            bool pointFound = false;
-            int polyIndex = -1;
-            int polyPointIndex = 0;
-            TPPLPoint bestPolyPoint = new();
-
-            for (int i = 0; i < polys.Count; i++)
-            {
-                var poly = polys[i];
-                if (poly.IsHole) continue;
-
-                for (int j = 0; j < poly.Count; j++)
-                {
-                    if (poly[j].X <= holePoint.X) continue;
-
-                    int prev = (j + poly.Count - 1) % poly.Count;
-                    int next = (j + 1) % poly.Count;
-
-                    if (!TPPLPointUtil.InCone(poly[prev], poly[j], poly[next], holePoint))
-                        continue;
-
-                    TPPLPoint polyPoint = poly[j];
-                    if (pointFound)
-                    {
-                        float v1Dist = TPPLPointUtil.Distance(holePoint, polyPoint);
-                        float v2Dist = TPPLPointUtil.Distance(holePoint, bestPolyPoint);
-                        if (v2Dist < v1Dist) continue;
+                        holePointIndex = 0;
                     }
 
-                    bool pointVisible = true;
-                    for (int k = 0; k < polys.Count; k++)
+                    for (int j = 0; j < polyI.Count; j++)
                     {
-                        if (polys[k].IsHole) continue;
-
-                        for (int l = 0; l < polys[k].Count; l++)
+                        if (polyI[j].X > polys[holeIndex][holePointIndex].X)
                         {
-                            TPPLPoint lineP1 = polys[k][l];
-                            TPPLPoint lineP2 = polys[k][(l + 1) % polys[k].Count];
-                            if (TPPLPointUtil.Intersects(holePoint, polyPoint, lineP1, lineP2))
-                            {
-                                pointVisible = false;
-                                break;
-                            }
+                            holeIndex = i;
+                            holePointIndex = j;
                         }
-                        if (!pointVisible) break;
-                    }
-
-                    if (pointVisible)
-                    {
-                        pointFound = true;
-                        bestPolyPoint = polyPoint;
-                        polyIndex = i;
-                        polyPointIndex = j;
                     }
                 }
+
+                if (holeIndex == -1) break;
+
+                var holePoly = polys[holeIndex];
+                var holePoint = holePoly[holePointIndex];
+
+                int polyIndex = -1;
+                int polyPointIndex = 0;
+                TPPLPoint bestPolyPoint = new();
+
+                for (int i = 0; i < polys.Count; i++)
+                {
+                    var polyI = polys[i];
+                    if (polyI.IsHole) continue;
+
+                    for (int j = 0; j < polyI.Count; j++)
+                    {
+                        TPPLPoint polyPoint = polyI[j];
+
+                        if (polyPoint.X <= holePoint.X) continue;
+
+                        int prev = (j + polyI.Count - 1) % polyI.Count;
+                        int next = (j + 1) % polyI.Count;
+
+                        if (!TPPLUtil.InCone(polyI[prev], polyPoint, polyI[next], holePoint))
+                            continue;
+
+                        if (polyIndex != -1)
+                        {
+                            float v1Dist = TPPLUtil.Distance(holePoint, polyPoint);
+                            float v2Dist = TPPLUtil.Distance(holePoint, bestPolyPoint);
+                            if (v2Dist < v1Dist) continue;
+                        }
+
+                        bool pointInvisible = false;
+                        foreach (var polyK in polys)
+                        {
+                            if (polyK.IsHole) continue;
+
+                            for (int l = 0; l < polyK.Count; l++)
+                            {
+                                var lineP1 = polyK[l];
+                                var lineP2 = polyK[(l + 1) % polyK.Count];
+                                if (TPPLUtil.Intersects(holePoint, polyPoint, lineP1, lineP2))
+                                {
+                                    pointInvisible = true;
+                                    break;
+                                }
+                            }
+                            if (pointInvisible) break;
+                        }
+
+                        if (!pointInvisible)
+                        {
+                            bestPolyPoint = polyPoint;
+                            polyIndex = i;
+                            polyPointIndex = j;
+                        }
+                    }
+                }
+
+                if (polyIndex == -1)
+                    return false;
+
+                var poly = polys[polyIndex];
+
+                var newPoly = new TPPLPoint[holePoly.Count + poly.Count + 2];
+                var idx = 0;
+
+                for (int i = 0; i <= polyPointIndex; i++)
+                    newPoly[idx++] = poly[i];
+
+                for (int i = 0; i <= holePoly.Count; i++)
+                    newPoly[idx++] = holePoly[(i + holePointIndex) % holePoly.Count];
+
+                for (int i = polyPointIndex; i < poly.Count; i++)
+                    newPoly[idx++] = poly[i];
+
+                var first = Math.Max(holeIndex, polyIndex);
+                var second = Math.Min(holeIndex, polyIndex);
+                polys.RemoveAt(first);
+                polys.RemoveAt(second);
+                polys.Add(new(newPoly, false));
             }
-
-            if (!pointFound)
-            {
-                outPolys = null;
-                return false;
-            }
-
-            var polyIter = polys[polyIndex];
-            var holeIter = polys[holeIndex];
-
-            var newPoly = new TPPLPoint[holeIter.Count + polyIter.Count + 2];
-            var idx = 0;
-
-            for (int i = 0; i <= polyPointIndex; i++)
-                newPoly[idx++] = polyIter[i];
-
-            for (int i = 0; i <= holeIter.Count; i++)
-                newPoly[idx++] = holeIter[(i + holePointIndex) % holeIter.Count];
-
-            for (int i = polyPointIndex; i < polyIter.Count; i++)
-                newPoly[idx++] = polyIter[i];
-
-
-            var first = Math.Max(holeIndex, polyIndex);
-            var second = Math.Min(holeIndex, polyIndex);
-            polys.RemoveAt(first);
-            polys.RemoveAt(second);
-            polys.Add(new(newPoly, false));
         }
 
-        outPolys = new List<TPPLPoint[]>(polys.Count);
+        outPolys.EnsureCapacity(outPolys.Count + polys.Count);
         foreach (var item in polys)
             outPolys.Add(item.Polygon);
 
         return true;
     }
+
 }

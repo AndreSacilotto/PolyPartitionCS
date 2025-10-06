@@ -13,9 +13,9 @@ partial class TPPLPartition
     {
         vtx.UpdateVertexReflexity();
 
-        var vec1 = TPPLPointUtil.Normalize(vtx.Previous.Point - vtx.Point);
-        var vec3 = TPPLPointUtil.Normalize(vtx.Next.Point - vtx.Point);
-        vtx.Angle = TPPLPoint.Dot(vec1, vec3);
+        var vec1 = TPPLUtil.Normalize(vtx.Previous.Point - vtx.Point);
+        var vec3 = TPPLUtil.Normalize(vtx.Next.Point - vtx.Point);
+        vtx.Angle = TPPLUtil.Dot(vec1, vec3);
 
         if (vtx.IsConvex)
         {
@@ -24,7 +24,7 @@ partial class TPPLPartition
             {
                 if (vertices[i].Point == vtx.Point || vertices[i].Point == vtx.Previous.Point || vertices[i].Point == vtx.Next.Point)
                     continue;
-                if (TPPLPointUtil.IsInside(vtx.Previous.Point, vtx.Point, vtx.Next.Point, vertices[i].Point))
+                if (TPPLUtil.IsInside(vtx.Previous.Point, vtx.Point, vtx.Next.Point, vertices[i].Point))
                 {
                     vtx.IsEar = false;
                     break;
@@ -39,10 +39,11 @@ partial class TPPLPartition
 
     #endregion
 
-    public static bool Triangulate_EC(List<TPPLPoint[]> inPolys, out List<TPPLPoint[]> triangles, TPPLOrientation holeOrientation = TPPLOrientation.CCW)
+
+    public static bool Triangulate_EC(TPPLPolygonList inPolys, out List<TPPLPoint[]> triangles) => Triangulate_EC(inPolys, triangles = []);
+    public static bool Triangulate_EC(TPPLPolygonList inPolys, List<TPPLPoint[]> triangles)
     {
-        triangles = [];
-        if (!RemoveHoles(inPolys, out var outPolys, holeOrientation))
+        if (!RemoveHoles(inPolys, out var outPolys))
             return false;
         foreach (var poly in outPolys)
             if (!Triangulate_EC(poly, triangles))
@@ -81,7 +82,7 @@ partial class TPPLPartition
 
             if (ear == null) { return false; }
 
-            TPPLPoint[] triangle = TPPLPointUtil.Triangle(ear.Previous.Point, ear.Point, ear.Next.Point);
+            TPPLPoint[] triangle = TPPLUtil.Triangle(ear.Previous.Point, ear.Point, ear.Next.Point);
             triangles.Add(triangle);
 
             ear.IsActive = false;
@@ -98,7 +99,7 @@ partial class TPPLPartition
         {
             if (vertices[i].IsActive)
             {
-                TPPLPoint[] triangle = TPPLPointUtil.Triangle(vertices[i].Previous.Point, vertices[i].Point, vertices[i].Next.Point);
+                TPPLPoint[] triangle = TPPLUtil.Triangle(vertices[i].Previous.Point, vertices[i].Point, vertices[i].Next.Point);
                 triangles.Add(triangle);
                 break;
             }

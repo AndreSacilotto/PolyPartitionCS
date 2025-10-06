@@ -7,10 +7,10 @@
 
 partial class TPPLPartition
 {
-    public static bool ConvexPartition_HM(List<TPPLPoint[]> inPolys, out List<TPPLPoint[]> parts, TPPLOrientation holeOrientation = TPPLOrientation.CCW)
+    public static bool ConvexPartition_HM(TPPLPolygonList inPolys, out List<TPPLPoint[]> parts) => ConvexPartition_HM(inPolys, parts = []);
+    public static bool ConvexPartition_HM(TPPLPolygonList inPolys, List<TPPLPoint[]> parts)
     {
-        parts = [];
-        if (!RemoveHoles(inPolys, out var outPolys, holeOrientation))
+        if (!RemoveHoles(inPolys, out var outPolys))
             return false;
         foreach (var poly in outPolys)
             if (!ConvexPartition_HM(poly, parts))
@@ -28,7 +28,7 @@ partial class TPPLPartition
         {
             int prevIndex = (currentIndex + vertexCount - 1) % vertexCount;
             int nextIndex = (currentIndex + 1) % vertexCount;
-            if (TPPLPointUtil.IsReflex(poly[prevIndex], poly[currentIndex], poly[nextIndex]))
+            if (TPPLUtil.IsReflex(poly[prevIndex], poly[currentIndex], poly[nextIndex]))
             {
                 hasReflexVertex = true;
                 break;
@@ -79,7 +79,7 @@ partial class TPPLPartition
                         int nextIdx = (otherEdgeEndIndex == otherTriangle.Length - 1) ? 0 : otherEdgeEndIndex + 1;
                         TPPLPoint nextPoint = otherTriangle[nextIdx];
                         
-                        if (!TPPLPointUtil.IsConvex(prevPoint, middlePoint, nextPoint))
+                        if (!TPPLUtil.IsConvex(prevPoint, middlePoint, nextPoint))
                         {
                             foundSharedEdge = false;
                             continue;
@@ -92,7 +92,7 @@ partial class TPPLPartition
                         int prevInOtherIndex = (otherEdgeStartIndex == 0) ? otherTriangle.Length - 1 : otherEdgeStartIndex - 1;
                         prevPoint = otherTriangle[prevInOtherIndex];
                         
-                        if (!TPPLPointUtil.IsConvex(prevPoint, middlePoint, nextPoint))
+                        if (!TPPLUtil.IsConvex(prevPoint, middlePoint, nextPoint))
                         {
                             foundSharedEdge = false;
                             continue;

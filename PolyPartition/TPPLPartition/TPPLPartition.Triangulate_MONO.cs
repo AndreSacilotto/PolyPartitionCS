@@ -2,7 +2,7 @@
 
 //Triangulation by partition into monotone polygons
 //Complexity: O(n* log(n))/O(n)
-//Holes: Yes
+//Holes: Yes, by nature
 //Solution: Poor, many thin triangles are created in most cases
 
 partial class TPPLPartition
@@ -145,9 +145,9 @@ partial class TPPLPartition
                 {
                     TPPLPoint[] triangle;
                     if (vertexTypes[vindex] == 1)
-                        triangle = TPPLPointUtil.Triangle(inPolys[stack[j + 1]], inPolys[stack[j]], inPolys[vindex]);
+                        triangle = TPPLUtil.Triangle(inPolys[stack[j + 1]], inPolys[stack[j]], inPolys[vindex]);
                     else
-                        triangle = TPPLPointUtil.Triangle(inPolys[stack[j]], inPolys[stack[j + 1]], inPolys[vindex]);
+                        triangle = TPPLUtil.Triangle(inPolys[stack[j]], inPolys[stack[j + 1]], inPolys[vindex]);
                     triangles.Add(triangle);
                 }
                 stack[0] = priority[i - 1];
@@ -161,9 +161,9 @@ partial class TPPLPartition
                 {
                     if (vertexTypes[vindex] == 1)
                     {
-                        if (TPPLPointUtil.IsConvex(inPolys[vindex], inPolys[stack[stackPtr - 1]], inPolys[stack[stackPtr]]))
+                        if (TPPLUtil.IsConvex(inPolys[vindex], inPolys[stack[stackPtr - 1]], inPolys[stack[stackPtr]]))
                         {
-                            TPPLPoint[] triangle = TPPLPointUtil.Triangle(inPolys[vindex], inPolys[stack[stackPtr - 1]], inPolys[stack[stackPtr]]);
+                            TPPLPoint[] triangle = TPPLUtil.Triangle(inPolys[vindex], inPolys[stack[stackPtr - 1]], inPolys[stack[stackPtr]]);
                             triangles.Add(triangle);
                             stackPtr--;
                         }
@@ -171,9 +171,9 @@ partial class TPPLPartition
                     }
                     else
                     {
-                        if (TPPLPointUtil.IsConvex(inPolys[vindex], inPolys[stack[stackPtr]], inPolys[stack[stackPtr - 1]]))
+                        if (TPPLUtil.IsConvex(inPolys[vindex], inPolys[stack[stackPtr]], inPolys[stack[stackPtr - 1]]))
                         {
-                            TPPLPoint[] triangle = TPPLPointUtil.Triangle(inPolys[vindex], inPolys[stack[stackPtr]], inPolys[stack[stackPtr - 1]]);
+                            TPPLPoint[] triangle = TPPLUtil.Triangle(inPolys[vindex], inPolys[stack[stackPtr]], inPolys[stack[stackPtr - 1]]);
                             triangles.Add(triangle);
                             stackPtr--;
                         }
@@ -190,9 +190,9 @@ partial class TPPLPartition
         {
             TPPLPoint[] triangle;
             if (vertexTypes[stack[j + 1]] == 1)
-                triangle = TPPLPointUtil.Triangle(inPolys[stack[j]], inPolys[stack[j + 1]], inPolys[lastVindex]);
+                triangle = TPPLUtil.Triangle(inPolys[stack[j]], inPolys[stack[j + 1]], inPolys[lastVindex]);
             else
-                triangle = TPPLPointUtil.Triangle(inPolys[stack[j + 1]], inPolys[stack[j]], inPolys[lastVindex]);
+                triangle = TPPLUtil.Triangle(inPolys[stack[j + 1]], inPolys[stack[j]], inPolys[lastVindex]);
             triangles.Add(triangle);
         }
 
@@ -200,9 +200,9 @@ partial class TPPLPartition
     }
     #endregion
 
-    public static bool Triangulate_MONO(List<TPPLPoint[]> inPolys, out List<TPPLPoint[]> triangles)
+    public static bool Triangulate_MONO(List<TPPLPoint[]> inPolys, out List<TPPLPoint[]> triangles) => Triangulate_MONO(inPolys, triangles = []);
+    public static bool Triangulate_MONO(List<TPPLPoint[]> inPolys, List<TPPLPoint[]> triangles)
     {
-        triangles = [];
         if (!MonotonePartition(inPolys, out var monotone))
             return false;
         foreach (var poly in monotone)
@@ -217,12 +217,12 @@ partial class TPPLPartition
         int numVertices = 0;
         foreach (var poly in inPolys)
         {
-            if (!TPPLPointUtil.IsValidPolygon(poly)) return false;
+            if (poly.Length < 3) return false;
             numVertices += poly.Length;
         }
 
         int maxNumVertices = numVertices * 3;
-        MonotoneVertex[] vertices = new MonotoneVertex[maxNumVertices];
+        var vertices = new MonotoneVertex[maxNumVertices];
         for (int i = 0; i < maxNumVertices; i++)
             vertices[i] = new MonotoneVertex();
 
@@ -236,8 +236,7 @@ partial class TPPLPartition
             {
                 vertices[i + polyStartIndex].Point = poly[i];
                 vertices[i + polyStartIndex].Previous = i == 0 ? polyEndIndex : i + polyStartIndex - 1;
-                vertices[i + polyStartIndex].Next = i == poly.Length - 1 ?
-                    polyStartIndex : i + polyStartIndex + 1;
+                vertices[i + polyStartIndex].Next = i == poly.Length - 1 ? polyStartIndex : i + polyStartIndex + 1;
             }
             polyStartIndex = polyEndIndex + 1;
         }
@@ -258,11 +257,11 @@ partial class TPPLPartition
 
             if (Below(vtxPrev.Point, vtx.Point) && Below(vtxNext.Point, vtx.Point))
             {
-                vertexTypes[i] = TPPLPointUtil.IsConvex(vtxNext.Point, vtxPrev.Point, vtx.Point) ? TPPLVertexType.Start : TPPLVertexType.Split;
+                vertexTypes[i] = TPPLUtil.IsConvex(vtxNext.Point, vtxPrev.Point, vtx.Point) ? TPPLVertexType.Start : TPPLVertexType.Split;
             }
             else if (Below(vtx.Point, vtxPrev.Point) && Below(vtx.Point, vtxNext.Point))
             {
-                vertexTypes[i] = TPPLPointUtil.IsConvex(vtxNext.Point, vtxPrev.Point, vtx.Point) ? TPPLVertexType.End : TPPLVertexType.Merge;
+                vertexTypes[i] = TPPLUtil.IsConvex(vtxNext.Point, vtxPrev.Point, vtx.Point) ? TPPLVertexType.End : TPPLVertexType.Merge;
             }
             else
             {
