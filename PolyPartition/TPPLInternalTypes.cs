@@ -6,7 +6,7 @@ internal class PartitionVertex
     public bool IsConvex;
     public bool IsEar;
     public TPPLPoint Point;
-    public float Angle;
+    public real_t Angle;
     public PartitionVertex Previous;
     public PartitionVertex Next;
 
@@ -81,7 +81,7 @@ internal struct Diagonal
 internal class DPState
 {
     public bool Visible;
-    public float Weight;
+    public real_t Weight;
     public int BestVertex;
 }
 

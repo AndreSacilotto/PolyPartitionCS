@@ -94,8 +94,8 @@ public static partial class TPPLPartition
 
                         if (polyIndex != -1)
                         {
-                            float v1Dist = TPPLPointMath.Distance(holePoint, polyPoint);
-                            float v2Dist = TPPLPointMath.Distance(holePoint, bestPolyPoint);
+                            real_t v1Dist = TPPLPointMath.Distance(holePoint, polyPoint);
+                            real_t v2Dist = TPPLPointMath.Distance(holePoint, bestPolyPoint);
                             if (v2Dist < v1Dist) continue;
                         }
 

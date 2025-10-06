@@ -90,16 +90,16 @@ partial class TPPLPartition
                 if (!dpstates[j][i].Visible) continue;
 
                 int bestVertex = -1;
-                float minWeight = 0;
+                real_t minWeight = 0;
 
                 for (int k = i + 1; k < j; k++)
                 {
                     if (!dpstates[k][i].Visible || !dpstates[j][k].Visible)
                         continue;
 
-                    float d1 = k <= i + 1 ? 0 : TPPLPointMath.Distance(poly[i], poly[k]);
-                    float d2 = j <= k + 1 ? 0 : TPPLPointMath.Distance(poly[k], poly[j]);
-                    float weight = dpstates[k][i].Weight + dpstates[j][k].Weight + d1 + d2;
+                    real_t d1 = k <= i + 1 ? 0 : TPPLPointMath.Distance(poly[i], poly[k]);
+                    real_t d2 = j <= k + 1 ? 0 : TPPLPointMath.Distance(poly[k], poly[j]);
+                    real_t weight = dpstates[k][i].Weight + dpstates[j][k].Weight + d1 + d2;
 
                     if (bestVertex == -1 || weight < minWeight)
                     {

@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace PolyPartition;
 
@@ -7,9 +8,9 @@ public static class TPPLUtil
     #region Array
     public static bool IsValidPolygon(ReadOnlySpan<TPPLPoint> points) => points.Length >= 3;
 
-    public static float SingedArea(ReadOnlySpan<TPPLPoint> points)
+    public static real_t SingedArea(ReadOnlySpan<TPPLPoint> points)
     {
-        float area = 0;
+        real_t area = 0;
         for (int i0 = 0, i1 = points.Length - 1; i0 < points.Length; i1 = i0++)
         {
             var p0 = points[i0];
@@ -19,7 +20,7 @@ public static class TPPLUtil
         return area;
     }
 
-    public static float CalculateArea(ReadOnlySpan<TPPLPoint> points) => TPPLPointMath.Abs(SingedArea(points)) / 2;
+    public static real_t CalculateArea(ReadOnlySpan<TPPLPoint> points) => TPPLPointMath.Abs(SingedArea(points)) / 2;
 
     /// <param name="positiveIsCCW">
     /// Left-hand rule (Y down): CW (+) and CCW (−) [e.g. Unity, Unreal, Screen space]<br/>
@@ -35,6 +36,12 @@ public static class TPPLUtil
         return TPPLOrientation.None;
     }
 
+    public static void SetOrientation(List<TPPLPoint> list, TPPLOrientation orientation, bool positiveIsCCW = true)
+    {
+        TPPLOrientation polyOrientation = GetOrientation(CollectionsMarshal.AsSpan(list), positiveIsCCW);
+        if (polyOrientation != TPPLOrientation.None && polyOrientation != orientation)
+            list.Reverse();
+    }
     public static void SetOrientation(TPPLPoint[] array, TPPLOrientation orientation, bool positiveIsCCW = true)
     {
         TPPLOrientation polyOrientation = GetOrientation(array, positiveIsCCW);
@@ -56,18 +63,18 @@ public static class TPPLUtil
         TPPLPoint normalB = new(b2.Y - b1.Y, b1.X - b2.X);
 
         // Project segment B’s endpoints onto line A
-        float projB1 = TPPLPointMath.Dot(b1 - a1, normalA);
-        float projB2 = TPPLPointMath.Dot(b2 - a1, normalA);
+        real_t projB1 = TPPLPointMath.Dot(b1 - a1, normalA);
+        real_t projB2 = TPPLPointMath.Dot(b2 - a1, normalA);
 
         // Project segment A’s endpoints onto line B
-        float projA1 = TPPLPointMath.Dot(a1 - b1, normalB);
-        float projA2 = TPPLPointMath.Dot(a2 - b1, normalB);
+        real_t projA1 = TPPLPointMath.Dot(a1 - b1, normalB);
+        real_t projA2 = TPPLPointMath.Dot(a2 - b1, normalB);
 
         // If both points of one segment lie on the same side of the other segment's line → no intersection
         return (projA1 * projA2 <= 0) && (projB1 * projB2 <= 0);
     }
 
-    [MethodImpl(INLINE)] private static float Cross2D(TPPLPoint p1, TPPLPoint p2, TPPLPoint p3) => (p3.Y - p1.Y) * (p2.X - p1.X) - (p3.X - p1.X) * (p2.Y - p1.Y);
+    [MethodImpl(INLINE)] private static real_t Cross2D(TPPLPoint p1, TPPLPoint p2, TPPLPoint p3) => (p3.Y - p1.Y) * (p2.X - p1.X) - (p3.X - p1.X) * (p2.Y - p1.Y);
     public static bool IsConvex(TPPLPoint p1, TPPLPoint p2, TPPLPoint p3) => Cross2D(p1, p2, p3) > 0;
     public static bool IsReflex(TPPLPoint p1, TPPLPoint p2, TPPLPoint p3) => Cross2D(p1, p2, p3) < 0;
 
