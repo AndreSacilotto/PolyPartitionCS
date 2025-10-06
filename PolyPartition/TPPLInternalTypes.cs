@@ -18,7 +18,7 @@ internal class PartitionVertex
 
     public bool InCone(TPPLPoint p) => TPPLUtil.InCone(Previous.Point, Point, Next.Point, p);
     public void UpdateVertexReflexity() => IsConvex = TPPLUtil.IsConvex(Previous.Point, Point, Next.Point);
-    public static PartitionVertex[] PartitionsFromPoly(TPPLPoint[] poly)
+    public static PartitionVertex[] PartitionsFromPoly(ReadOnlySpan<TPPLPoint> poly)
     {
         var len = poly.Length;
         PartitionVertex[] vertices = new PartitionVertex[len];

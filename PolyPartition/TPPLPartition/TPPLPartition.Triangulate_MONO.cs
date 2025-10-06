@@ -8,7 +8,7 @@
 partial class TPPLPartition
 {
     #region Helper MonotonePartition
-    private static void AddDiagonal(MonotoneVertex[] vertices, ref int numVertices, int index1, int index2,
+    private static void AddDiagonal(ReadOnlySpan<MonotoneVertex> vertices, ref int numVertices, int index1, int index2,
                             TPPLVertexType[] vertexTypes, Dictionary<int, ScanLineEdge> edgeTreeIterators,
                             SortedSet<ScanLineEdge> edgeTree, int[] helpers)
     {
@@ -57,13 +57,13 @@ partial class TPPLPartition
         return false;
     }
 
-    private static bool TriangulateMonotone(TPPLPoint[] inPolys, List<TPPLPoint[]> triangles)
+    private static bool TriangulateMonotone(ReadOnlySpan<TPPLPoint> inPolys, List<TPPLPoint[]> triangles)
     {
         int len = inPolys.Length;
         if (len < 3) return false;
         if (len == 3)
         {
-            triangles.Add(inPolys);
+            triangles.Add([.. inPolys]);
             return true;
         }
 

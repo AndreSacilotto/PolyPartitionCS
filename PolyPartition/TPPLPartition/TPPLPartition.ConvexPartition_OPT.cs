@@ -244,14 +244,17 @@ partial class TPPLPartition
         Queue<Diagonal> diagonals = new(1);
         diagonals.Enqueue(new Diagonal { Index1 = 0, Index2 = len - 1 });
 
-        while (diagonals.Count > 0)
+        do
         {
             Diagonal currentDiagonal = diagonals.Dequeue();
 
             if (currentDiagonal.Index2 - currentDiagonal.Index1 <= 1) continue;
 
             var diagonalPairs = dpstates[currentDiagonal.Index1][currentDiagonal.Index2].Pairs;
-            if (diagonalPairs.Count == 0) return false;
+            if (diagonalPairs.Count == 0)
+            {
+                return false;
+            }
 
             int selectedVertex;
             if (!vertices[currentDiagonal.Index1].IsConvex)
@@ -275,7 +278,7 @@ partial class TPPLPartition
                 diagonals.Enqueue(new Diagonal { Index1 = currentDiagonal.Index1, Index2 = selectedVertex });
             if (currentDiagonal.Index2 > selectedVertex + 1)
                 diagonals.Enqueue(new Diagonal { Index1 = selectedVertex, Index2 = currentDiagonal.Index2 });
-        }
+        } while (diagonals.Count > 0);
 
         return true;
     }

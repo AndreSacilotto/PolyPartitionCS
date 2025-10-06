@@ -7,7 +7,7 @@ public static class TPPLUtil
     #region Array
     public static bool IsValidPolygon(ReadOnlySpan<TPPLPoint> points) => points.Length >= 3;
 
-    private static float Area(ReadOnlySpan<TPPLPoint> points)
+    public static float SingedArea(ReadOnlySpan<TPPLPoint> points)
     {
         float area = 0;
         for (int i0 = 0, i1 = points.Length - 1; i0 < points.Length; i1 = i0++)
@@ -19,7 +19,7 @@ public static class TPPLUtil
         return area;
     }
 
-    public static float CalculateArea(ReadOnlySpan<TPPLPoint> points) => MathF.Abs(Area(points)) * 0.5f;
+    public static float CalculateArea(ReadOnlySpan<TPPLPoint> points) => TPPLPointMath.Abs(SingedArea(points)) / 2;
 
     /// <param name="positiveIsCCW">
     /// Left-hand rule (Y down): CW (+) and CCW (−) [e.g. Unity, Unreal, Screen space]<br/>
@@ -27,9 +27,11 @@ public static class TPPLUtil
     /// </param>
     public static TPPLOrientation GetOrientation(ReadOnlySpan<TPPLPoint> points, bool positiveIsCCW = true)
     {
-        var area = Area(points);
-        if (area > 0f) return positiveIsCCW ? TPPLOrientation.CCW : TPPLOrientation.CW;
-        if (area < 0f) return positiveIsCCW ? TPPLOrientation.CW : TPPLOrientation.CCW;
+        var area = SingedArea(points);
+        if (!positiveIsCCW)
+            area = -area;
+        if (area > 0) return TPPLOrientation.CCW;
+        if (area < 0) return TPPLOrientation.CW;
         return TPPLOrientation.None;
     }
 
@@ -43,17 +45,6 @@ public static class TPPLUtil
     public static TPPLPoint[] Triangle(TPPLPoint p1, TPPLPoint p2, TPPLPoint p3) => [p1, p2, p3];
     #endregion
 
-    public static TPPLPoint Normalize(TPPLPoint p)
-    {
-        float n = MathF.Sqrt(p.X * p.X + p.Y * p.Y);
-        if (n != 0)
-            return p / n;
-        return new(0, 0);
-    }
-
-    [MethodImpl(INLINE)] public static float Distance(TPPLPoint p1, TPPLPoint p2) => TPPLPoint.Distance(p1, p2);
-    [MethodImpl(INLINE)] public static float Dot(TPPLPoint p1, TPPLPoint p2) => TPPLPoint.Dot(p1, p2);
-
     public static bool Intersects(TPPLPoint a1, TPPLPoint a2, TPPLPoint b1, TPPLPoint b2)
     {
         // If any endpoints are shared, treat as non-intersecting
@@ -65,12 +56,12 @@ public static class TPPLUtil
         TPPLPoint normalB = new(b2.Y - b1.Y, b1.X - b2.X);
 
         // Project segment B’s endpoints onto line A
-        float projB1 = Dot(b1 - a1, normalA);
-        float projB2 = Dot(b2 - a1, normalA);
+        float projB1 = TPPLPointMath.Dot(b1 - a1, normalA);
+        float projB2 = TPPLPointMath.Dot(b2 - a1, normalA);
 
         // Project segment A’s endpoints onto line B
-        float projA1 = Dot(a1 - b1, normalB);
-        float projA2 = Dot(a2 - b1, normalB);
+        float projA1 = TPPLPointMath.Dot(a1 - b1, normalB);
+        float projA2 = TPPLPointMath.Dot(a2 - b1, normalB);
 
         // If both points of one segment lie on the same side of the other segment's line → no intersection
         return (projA1 * projA2 <= 0) && (projB1 * projB2 <= 0);

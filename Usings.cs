@@ -26,13 +26,11 @@
 global using System;
 global using System.Collections.Generic;
 
-global using static PolyPartition.UtilShared;
-
-global using TPPLPoint = System.Numerics.Vector2;
+global using static PolyPartition.Usings;
 
 namespace PolyPartition;
 
-public static class UtilShared
+internal static class Usings
 {
     public const System.Runtime.CompilerServices.MethodImplOptions INLINE = System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining;
 }

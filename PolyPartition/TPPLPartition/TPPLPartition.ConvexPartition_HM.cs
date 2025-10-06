@@ -18,7 +18,7 @@ partial class TPPLPartition
         return true;
     }
     
-    public static bool ConvexPartition_HM(TPPLPoint[] poly, List<TPPLPoint[]> parts)
+    public static bool ConvexPartition_HM(Span<TPPLPoint> poly, List<TPPLPoint[]> parts)
     {
         var vertexCount = poly.Length;
         if (vertexCount < 3) return false;
@@ -37,7 +37,7 @@ partial class TPPLPartition
         
         if (!hasReflexVertex)
         {
-            parts.Add(poly);
+            parts.Add([.. poly]);
             return true;
         }
         

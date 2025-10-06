@@ -13,9 +13,9 @@ partial class TPPLPartition
     {
         vtx.UpdateVertexReflexity();
 
-        var vec1 = TPPLUtil.Normalize(vtx.Previous.Point - vtx.Point);
-        var vec3 = TPPLUtil.Normalize(vtx.Next.Point - vtx.Point);
-        vtx.Angle = TPPLUtil.Dot(vec1, vec3);
+        var vec1 = TPPLPointMath.Normalize(vtx.Previous.Point - vtx.Point);
+        var vec3 = TPPLPointMath.Normalize(vtx.Next.Point - vtx.Point);
+        vtx.Angle = TPPLPointMath.Dot(vec1, vec3);
 
         if (vtx.IsConvex)
         {
@@ -51,13 +51,13 @@ partial class TPPLPartition
         return true;
     }
 
-    public static bool Triangulate_EC(TPPLPoint[] poly, List<TPPLPoint[]> triangles)
+    public static bool Triangulate_EC(ReadOnlySpan<TPPLPoint> poly, List<TPPLPoint[]> triangles)
     {
         int len = poly.Length;
         if (len < 3) return false;
         if (len == 3)
         {
-            triangles.Add(poly);
+            triangles.Add([.. poly]);
             return true;
         }
 

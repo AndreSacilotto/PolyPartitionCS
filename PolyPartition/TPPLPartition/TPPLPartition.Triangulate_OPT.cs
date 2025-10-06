@@ -20,7 +20,7 @@ partial class TPPLPartition
         return true;
     }
 
-    public static bool Triangulate_OPT(TPPLPoint[] poly, List<TPPLPoint[]> triangles)
+    public static bool Triangulate_OPT(ReadOnlySpan<TPPLPoint> poly, List<TPPLPoint[]> triangles)
     {
         int len = poly.Length;
 
@@ -97,8 +97,8 @@ partial class TPPLPartition
                     if (!dpstates[k][i].Visible || !dpstates[j][k].Visible)
                         continue;
 
-                    float d1 = k <= i + 1 ? 0 : TPPLUtil.Distance(poly[i], poly[k]);
-                    float d2 = j <= k + 1 ? 0 : TPPLUtil.Distance(poly[k], poly[j]);
+                    float d1 = k <= i + 1 ? 0 : TPPLPointMath.Distance(poly[i], poly[k]);
+                    float d2 = j <= k + 1 ? 0 : TPPLPointMath.Distance(poly[k], poly[j]);
                     float weight = dpstates[k][i].Weight + dpstates[j][k].Weight + d1 + d2;
 
                     if (bestVertex == -1 || weight < minWeight)
