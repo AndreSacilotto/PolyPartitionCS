@@ -3,14 +3,14 @@ A port of https://github.com/ivanfratric/polypartition to c#, with many changes.
 
 ## NOTICEABLE CODE CHANGES
 
-- Originally designed for use with Godot4 C#, it supports up to .NET 9.
+- Originally designed for use with Godot4 C#, using .NET 9 with C#12.
 
 - Structure has been modified; classes are now more isolated.
 
-- System.Numerics is used instead of TPPLPoint to leverage SIMD instructions.
-  - This change removes an internally unused Id field (some may expect it).
-  - The implementation is therefore limited to single-precision floats.
+- TPPLPoint is not the same structure, in the redesign it become a custom class. Explanation of how to alter it are inside the file.
+  - This change removes an internally unused Id field.
 
+- Addition of TPPLOrientation, a utility class about CW and CCW.
 
 ### PolyPartition
 

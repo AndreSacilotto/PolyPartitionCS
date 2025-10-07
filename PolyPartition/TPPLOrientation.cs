@@ -19,9 +19,18 @@ public enum TPPLWindingOrder : int
     CCW = 1
 }
 
-public class TPPLOrientation(bool isClockwisePositive)
+public sealed class TPPLOrientation
 {
-    public readonly bool IsClockwisePositive = isClockwisePositive;
+    public bool IsClockwisePositive { get; }
+    public TPPLWindingOrder Outer { get; }
+    public TPPLWindingOrder Inner { get; }
+
+    private TPPLOrientation(bool isClockwisePositive = false)
+    {
+        IsClockwisePositive = isClockwisePositive;
+        Outer = isClockwisePositive ? TPPLWindingOrder.CW : TPPLWindingOrder.CCW;
+        Inner = isClockwisePositive ? TPPLWindingOrder.CCW : TPPLWindingOrder.CW;
+    }
 
     public static TPPLOrientation NegativeCW { get; } = new(false);
     public static TPPLOrientation PositiveCW { get; } = new(true);
@@ -29,7 +38,7 @@ public class TPPLOrientation(bool isClockwisePositive)
     [MethodImpl(INLINE)] public static real_t ShoelaceFormula(TPPLPoint p1, TPPLPoint p2) => p1.X * p2.Y - p1.Y * p2.X;
     [MethodImpl(INLINE)] public static real_t ShoelaceFormula(real_t x1, real_t x2, real_t y1, real_t y2) => x1 * y2 - y1 * x2;
 
-    public static real_t SignedArea(IEnumerable<TPPLPoint> polygon)
+    public static real_t SignedAreaEnumerable(IEnumerable<TPPLPoint> polygon)
     {
         var enumerator = polygon.GetEnumerator();
 
@@ -70,7 +79,7 @@ public class TPPLOrientation(bool isClockwisePositive)
         return area;
     }
 
-    public static real_t CalculateArea(IEnumerable<TPPLPoint> polygon) => TPPLPointMath.Abs(SignedArea(polygon)) / 2;
+    public static real_t CalculateAreaEnumerable(IEnumerable<TPPLPoint> polygon) => TPPLPointMath.Abs(SignedAreaEnumerable(polygon)) / 2;
     public static real_t CalculateArea(ReadOnlySpan<TPPLPoint> polygon) => TPPLPointMath.Abs(SignedArea(polygon)) / 2;
 
     public bool IsCounterClockWise(ReadOnlySpan<TPPLPoint> polygon)
@@ -97,10 +106,9 @@ public class TPPLOrientation(bool isClockwisePositive)
         if (area < 0) return TPPLWindingOrder.CW;
         return TPPLWindingOrder.Collinear;
     }
-
-    public TPPLWindingOrder GetOrientation(IEnumerable<TPPLPoint> polygon)
+    public TPPLWindingOrder GetOrientationEnumerable(IEnumerable<TPPLPoint> polygon)
     {
-        var area = SignedArea(polygon);
+        var area = SignedAreaEnumerable(polygon);
         if (IsClockwisePositive)
             area = -area;
         if (area > 0) return TPPLWindingOrder.CCW;
@@ -110,7 +118,7 @@ public class TPPLOrientation(bool isClockwisePositive)
 
     public void SetOrientation(List<TPPLPoint> list, TPPLWindingOrder orientation)
     {
-        var polyOrientation = GetOrientation(list);
+        var polyOrientation = GetOrientationEnumerable(list);
         if (polyOrientation != TPPLWindingOrder.Collinear && polyOrientation != orientation)
             list.Reverse();
     }
