@@ -286,8 +286,7 @@ partial class TPPLPartition
             {
                 case TPPLVertexType.Start:
                 {
-                    ScanLineEdge newEdge = new()
-                    {
+                    ScanLineEdge newEdge = new() {
                         P1 = vtx.Point,
                         P2 = vertices[vtx.Next].Point,
                         Index = vtxIdx
@@ -325,8 +324,7 @@ partial class TPPLPartition
                     vtxIdx2 = newNumVertices - 2;
                     vtx2 = vertices[vtxIdx2];
                     helpers[edgeIter.Index] = vtxIdx;
-                    var newEdge = new ScanLineEdge
-                    {
+                    var newEdge = new ScanLineEdge {
                         P1 = vtx2.Point,
                         P2 = vertices[vtx2.Next].Point,
                         Index = vtxIdx2
@@ -381,8 +379,7 @@ partial class TPPLPartition
                             vtx2 = vertices[vtxIdx2];
                         }
                         edgeTree.Remove(edgeTreeIterators[vtx.Previous]);
-                        var newEdge = new ScanLineEdge
-                        {
+                        var newEdge = new ScanLineEdge {
                             P1 = vtx2.Point,
                             P2 = vertices[vtx2.Next].Point,
                             Index = vtxIdx2

@@ -21,16 +21,15 @@ namespace PolyPartition;
 
 internal static class TPPLPointMath
 {
+    [MethodImpl(INLINE)] public static real_t Abs(real_t p) => Math.Abs(p);
 
 #if GODOT
     [MethodImpl(INLINE)] public static real_t Distance(TPPLPoint p1, TPPLPoint p2) => p1.DistanceTo(p2);
     [MethodImpl(INLINE)] public static real_t Dot(TPPLPoint p1, TPPLPoint p2) => p1.Dot(p2);
-    [MethodImpl(INLINE)] public static real_t Abs(real_t p) => Math.Abs(p);
     public static TPPLPoint Normalize(TPPLPoint p) => p.Normalized();
 #else
     [MethodImpl(INLINE)] public static real_t Distance(TPPLPoint p1, TPPLPoint p2) => TPPLPoint.Distance(p1, p2);
     [MethodImpl(INLINE)] public static real_t Dot(TPPLPoint p1, TPPLPoint p2) => TPPLPoint.Dot(p1, p2);
-    [MethodImpl(INLINE)] public static real_t Abs(real_t p) => MathF.Abs(p);
     public static TPPLPoint Normalize(TPPLPoint p) => TPPLPoint.Normalize(p);
 #endif
 }

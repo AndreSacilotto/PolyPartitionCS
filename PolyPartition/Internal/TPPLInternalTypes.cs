@@ -24,8 +24,7 @@ internal class PartitionVertex
         PartitionVertex[] vertices = new PartitionVertex[len];
         for (int i = 0; i < len; i++)
         {
-            vertices[i] = new() // Temporary null values
-            {
+            vertices[i] = new() {
                 IsActive = true,
                 Point = poly[i],
             };

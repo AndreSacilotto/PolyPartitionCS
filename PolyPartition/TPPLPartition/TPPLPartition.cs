@@ -18,8 +18,7 @@ public static partial class TPPLPartition
     public static bool Partition(TPPLPartitionMethod method, TPPLPolygonList inPolys, out List<TPPLPoint[]> outPolys) => Partition(method, inPolys, outPolys = []);
     public static bool Partition(TPPLPartitionMethod method, TPPLPolygonList inPolys, List<TPPLPoint[]> outPolys)
     {
-        return method switch
-        {
+        return method switch {
             TPPLPartitionMethod.ConvexPartitionHM => ConvexPartition_HM(inPolys, outPolys),
             TPPLPartitionMethod.ConvexPartitionOPT => ConvexPartition_OPT(inPolys, outPolys),
             TPPLPartitionMethod.TriangulateEC => Triangulate_EC(inPolys, outPolys),

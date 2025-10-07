@@ -1,56 +1,10 @@
 ﻿using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace PolyPartition;
 
 public static class TPPLUtil
 {
-    #region Array
-    public static bool IsValidPolygon(ReadOnlySpan<TPPLPoint> points) => points.Length >= 3;
-
-    public static real_t SingedArea(ReadOnlySpan<TPPLPoint> points)
-    {
-        real_t area = 0;
-        for (int i0 = 0, i1 = points.Length - 1; i0 < points.Length; i1 = i0++)
-        {
-            var p0 = points[i0];
-            var p1 = points[i1];
-            area += p0.X * p1.Y - p0.Y * p1.X;
-        }
-        return area;
-    }
-
-    public static real_t CalculateArea(ReadOnlySpan<TPPLPoint> points) => TPPLPointMath.Abs(SingedArea(points)) / 2;
-
-    /// <param name="positiveIsCCW">
-    /// Left-hand rule (Y down): CW (+) and CCW (−) [e.g. Unity, Unreal, Screen space]<br/>
-    /// Right-hand rule (Y up): CCW (+) and CW (−) [e.g. Godot, OpenGL, World space]
-    /// </param>
-    public static TPPLOrientation GetOrientation(ReadOnlySpan<TPPLPoint> points, bool positiveIsCCW = true)
-    {
-        var area = SingedArea(points);
-        if (!positiveIsCCW)
-            area = -area;
-        if (area > 0) return TPPLOrientation.CCW;
-        if (area < 0) return TPPLOrientation.CW;
-        return TPPLOrientation.None;
-    }
-
-    public static void SetOrientation(List<TPPLPoint> list, TPPLOrientation orientation, bool positiveIsCCW = true)
-    {
-        TPPLOrientation polyOrientation = GetOrientation(CollectionsMarshal.AsSpan(list), positiveIsCCW);
-        if (polyOrientation != TPPLOrientation.None && polyOrientation != orientation)
-            list.Reverse();
-    }
-    public static void SetOrientation(TPPLPoint[] array, TPPLOrientation orientation, bool positiveIsCCW = true)
-    {
-        TPPLOrientation polyOrientation = GetOrientation(array, positiveIsCCW);
-        if (polyOrientation != TPPLOrientation.None && polyOrientation != orientation)
-            Array.Reverse(array);
-    }
-
     public static TPPLPoint[] Triangle(TPPLPoint p1, TPPLPoint p2, TPPLPoint p3) => [p1, p2, p3];
-    #endregion
 
     public static bool Intersects(TPPLPoint a1, TPPLPoint a2, TPPLPoint b1, TPPLPoint b2)
     {
