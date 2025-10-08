@@ -16,11 +16,26 @@ public record TPPLPolygon(TPPLPoint[] Polygon, bool IsHole = false)
 
 public class TPPLPolygonList : List<TPPLPolygon>
 {
-    public bool HasHoles { get; set; }
+    public bool HasHoles { get; set; } = false;
 
     public TPPLPolygonList() : base() { }
     public TPPLPolygonList(IEnumerable<TPPLPolygon> collection) : base(collection) { }
     public TPPLPolygonList(int capacity) : base(capacity) { }
+
+    public void AddOuter(TPPLPoint[] polygon)
+    {
+        if (polygon.Length >= 3) 
+            Add(new(polygon, false));
+    }
+
+    public void AddHole(TPPLPoint[] polygon)
+    {
+        if (polygon.Length >= 3)
+        {
+            Add(new(polygon, true));
+            HasHoles = true;
+        }
+    }
 
     public List<TPPLPoint[]> ToPoints()
     {
@@ -51,11 +66,15 @@ public class TPPLPolygonList : List<TPPLPolygon>
         return polyList;
     }
 
+    /// <param name="deepCopy"><see cref="TPPLPartition.RemoveHoles"/> will alter it <see cref="TPPLPolygonList"/>, but not the array</param>
     public static TPPLPolygonList CreateByOrientation(ReadOnlySpan<TPPLPoint[]> inPolys, TPPLOrientation orientation, bool deepCopy = false)
     {
         var polys = new TPPLPolygonList(inPolys.Length);
         foreach (var inPoly in inPolys)
         {
+            if (inPoly.Length < 3)
+                continue;
+
             var winding = orientation.GetOrientation(inPoly);
             var poly = deepCopy ? [.. inPoly] : inPoly;
             if (winding == orientation.Inner)
@@ -69,10 +88,13 @@ public class TPPLPolygonList : List<TPPLPolygon>
         return polys;
     }
 
-    /// <param name="outerOrientation">hole orientation will be the opposite, pass <see cref="TPPLOrientation.None"/> to skip</param>
+    /// <param name="outerOrientation">pass <see cref="null"/> to skip</param>
+    /// <param name="deepCopy"><see cref="TPPLPartition.RemoveHoles"/> will alter it <see cref="TPPLPolygonList"/>, but not the array</param>
     public static TPPLPolygonList CreateAndSetOrientation(ReadOnlySpan<TPPLPoint[]> outerPolys, ReadOnlySpan<TPPLPoint[]> holesPolys, TPPLOrientation? orientation, bool deepCopy = false)
     {
-        var polys = new TPPLPolygonList(outerPolys.Length + holesPolys.Length);
+        var polys = new TPPLPolygonList(outerPolys.Length + holesPolys.Length) {
+            HasHoles = holesPolys.Length > 0
+        };
 
         foreach (var poly in outerPolys)
         {
